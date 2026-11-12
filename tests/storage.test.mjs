@@ -63,5 +63,12 @@ export default [
       t.cleanGen = t.doc.changeGeneration(true); A.run("closeActive"); await new Promise(r => setTimeout(r, 200));
       return [A.tabs()[A.tabs().length - 1].kind, A.split.tab && (A.split.tab.kind || "text")]; });
     assert.deepEqual(r, ["hex", "text"]);
-  }}
+  }},
+  { name: "a .tsx tab saved as TypeScript comes back as TypeScript (TSX)", async fn({ open, ready }){
+    const p = await open();
+    await p.evaluate(() => { const A = window.__plainpad; A.A.newTab(); const t = A.tabs()[A.tabs().length - 1]; t.name = "App.tsx"; t.langId = "ts"; A.cmMain.setValue("const a = <div>x</div>;"); A.persist(); });
+    await p.reload(); await ready(p);
+    const r = await p.evaluate(() => { const A = window.__plainpad; const t = A.tabs().find(x => x.name === "App.tsx"); return { lang: t.langId, mode: A.cmMain.getOption("mode"), tag: A.cmMain.getTokenTypeAt({ line:0, ch:12 }) }; });
+    assert.equal(r.lang, "tsx"); assert.match(r.tag || "", /tag/, "the restored tab highlights JSX");
+  }},
 ];

@@ -28,6 +28,12 @@ function persist(){
   if (session.migrating) docsDone.then(ok => { if (ok){ session.migrating = false; try { localStorage.removeItem(OLD_STORE_KEY); } catch(e){} } });
 }
 function readJSON(key){ try { return JSON.parse(localStorage.getItem(key) || "null"); } catch(e){ return null; } }
+/* The language a stored tab was saved with. Sessions from before the JSX modes existed saved .tsx as TypeScript and .jsx as
+   JavaScript, the only choices then; those move to the JSX variant, which is what the file name now picks. */
+function storedLang(o){
+  const lang = LANG[o.lang] ? o.lang : undefined, byName = langForName(o.name);
+  return (lang === "ts" && byName === "tsx") || (lang === "js" && byName === "jsx") ? byName : lang;
+}
 function applyStoredSettings(s){ if (s && s.settings) Object.assign(settings, s.settings); if (!Array.isArray(settings.macros)) settings.macros = []; }
 async function restore(){
   let s = readJSON(STORE_KEY), legacy = false;
@@ -44,7 +50,7 @@ async function restore(){
     if (o.kind === "hex"){ if (o.id) tabs.push(hexRestoreTab(o)); return; }
     let text = legacy ? o.text : texts.get(o.id);
     if (text == null){ if (o.untitled && !o.dirty) text = ""; else { lost.push(o.name); return; } }
-    const t = makeTab({ id: legacy ? null : o.id, name:o.name, path:o.path || null, text, lang: LANG[o.lang] ? o.lang : undefined, eol: EOLS[o.eol] ? o.eol : "LF", bom:!!o.bom, encoding:o.enc || "UTF-8", untitled:!!o.untitled, dirty:!!o.dirty, bm:o.bm });
+    const t = makeTab({ id: legacy ? null : o.id, name:o.name, path:o.path || null, text, lang: storedLang(o), eol: EOLS[o.eol] ? o.eol : "LF", bom:!!o.bom, encoding:o.enc || "UTF-8", untitled:!!o.untitled, dirty:!!o.dirty, bm:o.bm });
     if (o.cur) t.doc.setCursor(o.cur);
     if (!legacy) t.savedGen = t.doc.changeGeneration();
     tabs.push(t);
