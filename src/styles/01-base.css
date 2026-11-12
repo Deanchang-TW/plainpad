@@ -48,7 +48,7 @@
 
 html{height:100%;box-sizing:border-box}
 *,*::before,*::after{box-sizing:inherit}
-body{height:100%;margin:0;background:var(--chrome);color:var(--fg);font:13px/1.4 var(--ui);overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{height:100%;margin:0;background:var(--chrome);color:var(--fg);font:13px/1.4 var(--ui);overflow:hidden}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
