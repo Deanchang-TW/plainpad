@@ -25,6 +25,7 @@ function renderTabs(){
   plus.addEventListener("click", newTab); wrap.appendChild(plus);
   dirtySig = tabs.map(t => isDirty(t) ? 1 : 0).join("");
   renderPaneHeads();
+  if (NATIVE) nativeTitle();
 }
 function moveTab(from, to){ if (from === to || from < 0) return; const activeTab = cur(); const [t] = tabs.splice(from, 1); tabs.splice(to, 0, t); active = tabs.indexOf(activeTab); renderTabs(); persistSoon(); }
 async function renameTab(t = curT()){

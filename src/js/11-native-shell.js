@@ -26,7 +26,17 @@ async function nativeOpen(items){
   }
   if (opened) focusEditor();
 }
+/* The window title follows the active tab: its name, its path (macOS shows the file's icon and lets you ⌘-click the
+   title for the folder chain) and whether it has unsaved changes (the dot in the close button). */
+let nativeTitleSig = "";
+function nativeTitle(){
+  const t = cur(); if (!t) return;
+  const msg = { type:"title", name:t.name, path:t.path || null, dirty:isDirty(t) };
+  const sig = JSON.stringify(msg); if (sig === nativeTitleSig) return; nativeTitleSig = sig;
+  nativeCall(msg);
+}
 function nativeReady(){
   window.__ppNative = { run, open: nativeOpen, flush: () => Promise.resolve(persist()).then(() => true) };
   nativeCall({ type:"ready" });
+  nativeTitle();
 }

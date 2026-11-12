@@ -16,12 +16,14 @@ const decode = b64 => Buffer.from(b64, "base64").toString("utf8");
 export default [
   { name: "inside the macOS app, files open from the bridge and save back to their path without a prompt", async fn({ open }){
     const p = await open({ init: fakeBridge, downloads: false });
-    assert.deepEqual(await p.evaluate(() => window.__bridge.map(m => m.type)), ["ready"], "the page tells the app when it has booted");
+    assert.deepEqual(await p.evaluate(() => window.__bridge.map(m => m.type).filter(t => t !== "title")), ["ready"], "the page tells the app when it has booted");
 
     await p.ctx.route("**/__file/*", r => r.fulfill({ body: "hello\n", contentType: "application/octet-stream" }));
     await p.evaluate(() => window.__ppNative.open([{ token: "t1", name: "note.txt", path: "/Users/me/note.txt" }]));
     await p.waitForFunction(() => window.__plainpad.tabs().some(t => t.path === "/Users/me/note.txt"));
     assert.equal(await p.evaluate(() => window.__plainpad.cmMain.getValue()), "hello\n");
+    const titles = () => p.evaluate(() => window.__bridge.filter(m => m.type === "title").map(m => [m.name, m.path, m.dirty].join("|")));
+    assert.equal((await titles()).pop(), "note.txt|/Users/me/note.txt|false", "the window title follows the active tab");
     /* Opening the same file again (Finder, Dock) switches to its tab instead of adding one, even after a restart has
        dropped the original bytes. */
     await p.evaluate(() => { window.__plainpad.tabs().find(t => t.path === "/Users/me/note.txt").bytes = null; });
@@ -31,6 +33,7 @@ export default [
     assert.equal(await p.evaluate(() => window.__plainpad.tabs().filter(t => t.path === "/Users/me/note.txt").length), 1);
 
     await p.evaluate(() => window.__plainpad.cmMain.setCursor({ line: 1, ch: 0 })); await p.keyboard.insertText("world\n");
+    await p.waitForFunction(() => window.__bridge.some(m => m.type === "title" && m.dirty));
     await p.evaluate(() => window.__plainpad.run("save"));
     await p.waitForFunction(() => window.__bridge.some(m => m.type === "save"));
     let saves = (await p.evaluate(() => window.__bridge)).filter(m => m.type === "save");
@@ -39,6 +42,7 @@ export default [
     assert.equal(saves[0].filename, "note.txt");
     assert.equal(decode(saves[0].data), "hello\nworld\n");
     assert.equal(await p.evaluate(() => document.querySelector("#modal:not([hidden])")), null, "no in-page name prompt");
+    assert.equal((await titles()).pop(), "note.txt|/Users/me/note.txt|false", "the title drops the edited mark after saving");
     assert.equal(await p.evaluate(() => { const t = window.__plainpad.tabs().find(t => t.path === "/Users/me/note.txt"); return t.forceDirty || !t.doc.isClean(t.cleanGen); }), false, "saved tab is clean");
 
     /* 另存新檔 leaves the path out so the app shows its save panel, and the tab then follows the chosen file. */

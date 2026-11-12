@@ -9,6 +9,7 @@ import WebKit
 ///   { type: "ready" }                                     the page has booted and `window.__ppNative` exists
 ///   { type: "openPanel" }                                 show NSOpenPanel
 ///   { type: "save", filename, path, data (base64) }       write the file; reply { status, path, filename }
+///   { type: "title", name, path, dirty }                  the active tab changed; shown in the window title bar
 /// The app calls back into the page through `window.__ppNative.run(name)`, `.open(items)` and `.flush()`.
 final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHandler, WKNavigationDelegate, WKUIDelegate {
     static let scheme = "plainpad"
@@ -92,6 +93,13 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
         case "openPanel":
             replyHandler(nil, nil)
             showOpenPanel()
+        case "title":
+            replyHandler(nil, nil)
+            if let window = webView.window {
+                window.title = (body["name"] as? String) ?? "Plainpad"
+                window.representedURL = (body["path"] as? String).flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
+                window.isDocumentEdited = (body["dirty"] as? Bool) ?? false
+            }
         case "save":
             save(body, replyHandler)
         default:
