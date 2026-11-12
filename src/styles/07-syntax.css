@@ -1,6 +1,6 @@
 /* word completion popup (show-hint addon) */
-.CodeMirror-hints{position:absolute;z-index:70;overflow-y:auto;list-style:none;margin:0;padding:3px;max-height:16em;background:var(--pop);border:1px solid var(--line);border-radius:6px;box-shadow:0 8px 24px var(--shadow);font:13px var(--mono)}
-.CodeMirror-hint{margin:0;padding:1px 8px;border-radius:3px;white-space:pre;color:var(--fg);cursor:pointer}
+.CodeMirror-hints{position:absolute;z-index:70;overflow-y:auto;list-style:none;margin:0;padding:3px;max-height:16em;background:var(--pop);border:1px solid var(--line);border-radius:8px;box-shadow:0 1px 2px var(--shadow-2),0 12px 30px -8px var(--shadow);font:13px var(--mono)}
+.CodeMirror-hint{margin:0;padding:2px 8px;border-radius:5px;white-space:pre;color:var(--fg);cursor:pointer}
 li.CodeMirror-hint-active{background:var(--accent);color:var(--accent-ink)}
 
 /* syntax */

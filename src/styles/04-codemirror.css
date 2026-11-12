@@ -4,8 +4,8 @@
 .CodeMirror pre.CodeMirror-line,.CodeMirror pre.CodeMirror-line-like{padding:0 8px;border-radius:0;border-width:0;background:transparent;font-family:inherit;font-size:inherit;margin:0;white-space:pre;word-wrap:normal;line-height:inherit;color:inherit;z-index:2;position:relative;overflow:visible;-webkit-tap-highlight-color:transparent;font-variant-ligatures:none}
 .CodeMirror-wrap pre.CodeMirror-line,.CodeMirror-wrap pre.CodeMirror-line-like{word-wrap:break-word;white-space:pre-wrap;word-break:normal}
 .CodeMirror-scrollbar-filler,.CodeMirror-gutter-filler{background:var(--paper)}
-.CodeMirror-gutters{position:absolute;left:0;top:0;min-height:100%;z-index:3;border-right:1px solid var(--line);background:var(--gutter);white-space:nowrap}
-.CodeMirror-linenumber{padding:0 6px 0 4px;min-width:22px;text-align:right;color:var(--muted);white-space:nowrap;font-size:.86em}
+.CodeMirror-gutters{position:absolute;left:0;top:0;min-height:100%;z-index:3;border-right:1px solid var(--line-soft);background:var(--gutter);white-space:nowrap}
+.CodeMirror-linenumber{padding:0 8px 0 6px;min-width:22px;text-align:right;color:color-mix(in srgb,var(--muted) 75%,transparent);white-space:nowrap;font-size:.86em}
 .CodeMirror-cursor{border-left:1.5px solid var(--fg);border-right:none;width:0;position:absolute;pointer-events:none}
 .CodeMirror div.CodeMirror-secondarycursor{border-left:1.5px solid var(--accent)}
 .CodeMirror-overwrite .CodeMirror-cursor{border-left:0;border-bottom:2px solid var(--fg);width:auto}
@@ -38,13 +38,14 @@ div.CodeMirror-dragcursors{visibility:visible}
 .cm-force-border{padding-right:.1px}
 span.CodeMirror-selectedtext{background:none}
 .CodeMirror-activeline-background{background:var(--activeline)}
+.CodeMirror-activeline-gutter .CodeMirror-linenumber{color:var(--fg)}
 .CodeMirror-matchingbracket{outline:1px solid var(--accent);color:inherit!important;border-radius:2px}
 .CodeMirror-nonmatchingbracket{color:var(--danger)!important;text-decoration:underline wavy}
 .CodeMirror-foldgutter{width:14px}
 .CodeMirror-foldgutter-open,.CodeMirror-foldgutter-folded{cursor:pointer;color:var(--muted);text-align:center;font-size:.8em}
 .CodeMirror-foldgutter-open:after{content:"\25BE"}
 .CodeMirror-foldgutter-folded:after{content:"\25B8"}
-.CodeMirror-foldmarker{color:var(--accent);background:var(--chrome);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin:0 2px;cursor:pointer;font-size:.85em}
+.CodeMirror-foldmarker{color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:4px;padding:0 4px;margin:0 2px;cursor:pointer;font-size:.85em}
 .cm-matchhighlight{background:var(--smart);border-radius:2px}
 .cm-hit{background:var(--hit);border-radius:2px}
 .cm-userMark{background:var(--mark);border-radius:2px}

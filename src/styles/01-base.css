@@ -1,40 +1,46 @@
-/* Layout: one-screen editor window — menu row, left-aligned toolbar row, tab strip joined to the paper (one or two panes), docked find panel, docked results panel, status bar. */
+/* Layout: one-screen editor window — menu row, left-aligned toolbar row, tab strip joined to the paper (one or two panes), docked find panel, docked results panel, status bar.
+   Colours are tokens. The light and dark sets each appear twice: once for the system preference and once for the theme the user picked in the 檢視 menu (data-pad-theme). */
 :root{
-  --chrome:#e8ebef; --chrome-2:#dbe0e6; --paper:#ffffff; --gutter:#f3f5f7;
-  --fg:#1b2127; --muted:#67727e; --line:#c7ced6; --accent:#17845f; --accent-ink:#ffffff;
-  --sel:#b9dcf5; --sel-blur:#dde3e9; --activeline:#eef3fd; --hit:#ffe27a; --mark:#ffbfa3; --smart:#c6efcf;
-  --ws:#a3adb8; --pop:#ffffff; --shadow:rgba(20,30,40,.18); --danger:#c23b2a;
+  --chrome:#eef0f3; --chrome-2:#e0e4ea; --chrome-3:#d2d8e0; --paper:#ffffff; --gutter:#f6f7f9;
+  --fg:#1b2129; --fg-2:#3b4552; --muted:#6a7580; --line:#d4dae1; --line-soft:#e5e9ee; --accent:#0f8a5f; --accent-2:#34b57d; --accent-ink:#ffffff;
+  --sel:#b9dcf5; --sel-blur:#dde3e9; --activeline:#f0f5fc; --hit:#ffe27a; --mark:#ffbfa3; --smart:#c6efcf;
+  --ws:#a3adb8; --pop:#ffffff; --shadow:rgba(20,30,40,.16); --shadow-2:rgba(20,30,40,.08); --danger:#d2432f; --dirty:#e0813a;
   --diff-add:#d7f5dd; --diff-del:#fbdcdc; --diff-chg:#fff1c2; --bm:#2f6fd6; --bm-line:#e3edff;
   --k:#1b3fbf; --s:#a3410f; --n:#c25e00; --c:#2c7d32; --t:#7b2cb3; --m:#8a5a00; --b:#0b7285; --a:#b00069; --attr:#b45309;
   --ui:"IBM Plex Sans","PingFang TC","Noto Sans TC",system-ui,-apple-system,sans-serif;
   --mono:"JetBrains Mono","SF Mono",Menlo,Consolas,"PingFang TC",monospace;
   --editor-size:14px;
+  --r:8px; --r-s:6px;
+  --accent-soft:color-mix(in srgb,var(--accent) 12%,transparent);
+  --accent-soft-2:color-mix(in srgb,var(--accent) 20%,transparent);
+  --ring:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent);
+  --ease:.14s ease;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --chrome:#1c2026; --chrome-2:#272c34; --paper:#14171b; --gutter:#181b20;
-    --fg:#d8dde3; --muted:#7f8994; --line:#2f353e; --accent:#45c08e; --accent-ink:#0b1410;
-    --sel:#264f78; --sel-blur:#2a3038; --activeline:#1b2028; --hit:#6b5a12; --mark:#7a3a26; --smart:#1f4a2e;
-    --ws:#4a525c; --pop:#21262d; --shadow:rgba(0,0,0,.5); --danger:#ff7b6b;
+    --chrome:#1a1e24; --chrome-2:#262b33; --chrome-3:#323944; --paper:#111418; --gutter:#161a1f;
+    --fg:#dce1e7; --fg-2:#b7bec7; --muted:#808a95; --line:#2e343d; --line-soft:#232931; --accent:#3fc38c; --accent-2:#7adcb3; --accent-ink:#07130d;
+    --sel:#264f78; --sel-blur:#2a3038; --activeline:#191e25; --hit:#6b5a12; --mark:#7a3a26; --smart:#1f4a2e;
+    --ws:#4a525c; --pop:#20252c; --shadow:rgba(0,0,0,.55); --shadow-2:rgba(0,0,0,.3); --danger:#ff7b6b; --dirty:#f0a05a;
     --diff-add:#16351f; --diff-del:#3d1d1d; --diff-chg:#3a3216; --bm:#6ea2ff; --bm-line:#1a2740;
     --k:#7aa2ff; --s:#e6a26a; --n:#f2b366; --c:#6fae6f; --t:#c792ea; --m:#d7b56d; --b:#56c2d6; --a:#f07fb0; --attr:#e6b36a;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"], :root[data-pad-theme="dark"]{
-  --chrome:#1c2026; --chrome-2:#272c34; --paper:#14171b; --gutter:#181b20;
-  --fg:#d8dde3; --muted:#7f8994; --line:#2f353e; --accent:#45c08e; --accent-ink:#0b1410;
-  --sel:#264f78; --sel-blur:#2a3038; --activeline:#1b2028; --hit:#6b5a12; --mark:#7a3a26; --smart:#1f4a2e;
-  --ws:#4a525c; --pop:#21262d; --shadow:rgba(0,0,0,.5); --danger:#ff7b6b;
+  --chrome:#1a1e24; --chrome-2:#262b33; --chrome-3:#323944; --paper:#111418; --gutter:#161a1f;
+  --fg:#dce1e7; --fg-2:#b7bec7; --muted:#808a95; --line:#2e343d; --line-soft:#232931; --accent:#3fc38c; --accent-2:#7adcb3; --accent-ink:#07130d;
+  --sel:#264f78; --sel-blur:#2a3038; --activeline:#191e25; --hit:#6b5a12; --mark:#7a3a26; --smart:#1f4a2e;
+  --ws:#4a525c; --pop:#20252c; --shadow:rgba(0,0,0,.55); --shadow-2:rgba(0,0,0,.3); --danger:#ff7b6b; --dirty:#f0a05a;
   --diff-add:#16351f; --diff-del:#3d1d1d; --diff-chg:#3a3216; --bm:#6ea2ff; --bm-line:#1a2740;
   --k:#7aa2ff; --s:#e6a26a; --n:#f2b366; --c:#6fae6f; --t:#c792ea; --m:#d7b56d; --b:#56c2d6; --a:#f07fb0; --attr:#e6b36a;
   color-scheme:dark;
 }
 :root[data-pad-theme="light"]{
-  --chrome:#e8ebef; --chrome-2:#dbe0e6; --paper:#ffffff; --gutter:#f3f5f7;
-  --fg:#1b2127; --muted:#67727e; --line:#c7ced6; --accent:#17845f; --accent-ink:#ffffff;
-  --sel:#b9dcf5; --sel-blur:#dde3e9; --activeline:#eef3fd; --hit:#ffe27a; --mark:#ffbfa3; --smart:#c6efcf;
-  --ws:#a3adb8; --pop:#ffffff; --shadow:rgba(20,30,40,.18); --danger:#c23b2a;
+  --chrome:#eef0f3; --chrome-2:#e0e4ea; --chrome-3:#d2d8e0; --paper:#ffffff; --gutter:#f6f7f9;
+  --fg:#1b2129; --fg-2:#3b4552; --muted:#6a7580; --line:#d4dae1; --line-soft:#e5e9ee; --accent:#0f8a5f; --accent-2:#34b57d; --accent-ink:#ffffff;
+  --sel:#b9dcf5; --sel-blur:#dde3e9; --activeline:#f0f5fc; --hit:#ffe27a; --mark:#ffbfa3; --smart:#c6efcf;
+  --ws:#a3adb8; --pop:#ffffff; --shadow:rgba(20,30,40,.16); --shadow-2:rgba(20,30,40,.08); --danger:#d2432f; --dirty:#e0813a;
   --diff-add:#d7f5dd; --diff-del:#fbdcdc; --diff-chg:#fff1c2; --bm:#2f6fd6; --bm-line:#e3edff;
   --k:#1b3fbf; --s:#a3410f; --n:#c25e00; --c:#2c7d32; --t:#7b2cb3; --m:#8a5a00; --b:#0b7285; --a:#b00069; --attr:#b45309;
   color-scheme:light;
@@ -42,10 +48,20 @@
 
 html{height:100%;box-sizing:border-box}
 *,*::before,*::after{box-sizing:inherit}
-body{height:100%;margin:0;background:var(--chrome);color:var(--fg);font:13px/1.4 var(--ui);overflow:hidden}
+body{height:100%;margin:0;background:var(--chrome);color:var(--fg);font:13px/1.4 var(--ui);overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.app *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--muted) 40%,transparent) transparent}
+.app ::-webkit-scrollbar{width:10px;height:10px}
+.app ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 40%,transparent);border:3px solid transparent;background-clip:padding-box;border-radius:8px}
+.app ::-webkit-scrollbar-thumb:hover{background-color:color-mix(in srgb,var(--muted) 65%,transparent)}
+.app ::-webkit-scrollbar-track,.app ::-webkit-scrollbar-corner{background:transparent}
 
-.app{height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 6px}
+.app{height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 8px}
 
+/* shared small controls */
+.mini,.btn,.chip,.seg,.field input,.pane-head select,.hexbar select,.hexbar input[type="text"],.modal-card input[type="text"],.modal-card input[type="number"],.modal-card select{transition:border-color var(--ease),background-color var(--ease),box-shadow var(--ease),color var(--ease)}
+input[type="text"]:focus-visible,input[type="number"]:focus-visible,select:focus-visible{outline:none;border-color:var(--accent)!important;box-shadow:var(--ring)}
+input[type="checkbox"]{accent-color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important}}
