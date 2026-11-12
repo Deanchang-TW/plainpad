@@ -71,6 +71,7 @@ async function main(){
     copyFileSync(new URL("dist/artifact/vendor/" + name, root), new URL("dist/test/vendor/" + name, root));
   }
   writeFileSync(new URL("dist/test/index.html", root), shell(page, "<script>window.__PP_TEST = true</script>\n"));
+  writeFileSync(new URL("dist/test/prod.html", root), shell(page));
   const i = process.argv.indexOf("--compare");
   if (i > 0){
     const other = readFileSync(process.argv[i + 1], "utf8");
