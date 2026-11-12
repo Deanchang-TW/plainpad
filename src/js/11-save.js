@@ -1,15 +1,16 @@
 /* ---------- save ---------- */
 let downloadsP = null;
 function getDownloads(){
-  if (!downloadsP) downloadsP = (window.claude && typeof window.claude.use === "function") ? window.claude.use("downloads").catch(() => null) : Promise.resolve(null);
+  if (!downloadsP) downloadsP = NATIVE ? Promise.resolve(nativeDownloads) : (window.claude && typeof window.claude.use === "function") ? window.claude.use("downloads").catch(() => null) : Promise.resolve(null);
   return downloadsP;
 }
 async function saveTab(t = curT(), asNew = false){
   if (isHex(t)) return hexSave(t, asNew);
   let name = t.name;
   if (asNew || t.untitled){
-    const v = await promptText({ title: asNew ? "另存新檔" : "儲存「" + t.name + "」", text:"輸入檔名，副檔名會決定語法高亮。", value: t.untitled && !extOf(name) ? name + ".txt" : name, ok:"儲存" });
-    if (v == null || !v.trim()) return false; name = v.trim();
+    if (NATIVE){ if (t.untitled && !extOf(name)) name += ".txt"; }   // the save panel asks for the name
+    else { const v = await promptText({ title: asNew ? "另存新檔" : "儲存「" + t.name + "」", text:"輸入檔名，副檔名會決定語法高亮。", value: t.untitled && !extOf(name) ? name + ".txt" : name, ok:"儲存" });
+    if (v == null || !v.trim()) return false; name = v.trim(); }
   }
   const text = t.doc.getValue(EOLS[t.eol]);
   let enc = normEnc(t.encoding), bom = t.bom && bomCapable(enc);
@@ -37,7 +38,8 @@ async function saveTab(t = curT(), asNew = false){
     return false;
   }
   try {
-    await dl.save({ filename: fname, data: out.bytes });
+    const r = await dl.save({ filename: fname, data: out.bytes, path: asNew || t.untitled ? null : t.path });
+    if (r && r.path){ t.path = r.path; name = fname = r.filename; }
     const renamed = name !== t.name; t.name = name; t.untitled = false;
     if (renamed){ const l = langForName(name); if (l !== "text") setLang(t, l); }
     t.cleanGen = t.doc.changeGeneration(true); t.forceDirty = false;

@@ -26,6 +26,7 @@ function persist(){
   const docsDone = docsPersist();
   try { localStorage.setItem(STORE_KEY, JSON.stringify(sessionMeta())); } catch(e){ storageWarn(); }
   if (session.migrating) docsDone.then(ok => { if (ok){ session.migrating = false; try { localStorage.removeItem(OLD_STORE_KEY); } catch(e){} } });
+  return docsDone;
 }
 function readJSON(key){ try { return JSON.parse(localStorage.getItem(key) || "null"); } catch(e){ return null; } }
 /* The language a stored tab was saved with. Sessions from before the JSX modes existed saved .tsx as TypeScript and .jsx as

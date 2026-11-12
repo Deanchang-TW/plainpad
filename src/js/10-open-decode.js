@@ -26,7 +26,9 @@ async function openFileObj(f, path){
   const buf = await f.arrayBuffer();
   if (looksBinary(buf)) return openHexFile(f, path, "是二進位檔，以 Hex 檢視開啟");
   const key = path || f.name;
-  const existing = tabs.findIndex(t => (t.path || t.name) === key && !isDirty(t) && t.bytes);
+  // A clean tab for the same file is replaced rather than duplicated. Without a path, only the name is known, so the tab
+  // must still hold the bytes it was opened from; with a path (the macOS app), the path alone identifies the file.
+  const existing = tabs.findIndex(t => (t.path || t.name) === key && !isDirty(t) && (t.bytes || (path && t.path === path)));
   const r = decode(buf);
   const t = makeTab({ name:f.name, path: path || null, text:r.text, eol:detectEol(r.text), bom:r.bom, encoding:r.encoding, bytes:buf });
   const mixed = mixedEolNote(r.text);
@@ -42,7 +44,7 @@ async function openFiles(list){
   for (const f of [...list]){ try { if (await openFileObj(f)) opened++; } catch(e){ toast(`無法讀取「${f.name}」`); } }
   if (opened) focusEditor();
 }
-function openFile(){ const fi = $("#fileInput"); fi.value = ""; fi.click(); }
+function openFile(){ if (NATIVE){ nativeCall({ type:"openPanel" }); return; } const fi = $("#fileInput"); fi.value = ""; fi.click(); }
 $("#fileInput").addEventListener("change", e => openFiles(e.target.files));
 
 let dragDepth = 0;

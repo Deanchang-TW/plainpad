@@ -435,7 +435,7 @@ async function makeZip(name, blob){
 async function hexSave(t, asNew){
   let name = t.name; const s = t.hex;
   if (s.loading){ toast("內容還在載入，請稍候再存"); return false; }
-  if (asNew){ const v = await promptText({ title:"另存新檔", text:"輸入檔名。", value:name, ok:"儲存" }); if (v == null || !v.trim()) return false; name = v.trim(); }
+  if (asNew && !NATIVE){ const v = await promptText({ title:"另存新檔", text:"輸入檔名。", value:name, ok:"儲存" }); if (v == null || !v.trim()) return false; name = v.trim(); }
   const dl = await getDownloads(); if (!dl){ toast("這個檢視無法下載檔案"); return false; }
   const blob = s.buf.toBlob(); let fname = name, data = blob;
   if (!LOCAL && !DL_EXT.has(extOf(name))){
@@ -444,7 +444,7 @@ async function hexSave(t, asNew){
       actions:[{ id:"cancel", label:"取消" }, { id:"txt", label:"存成 .txt", primary:tooBig }, ...(tooBig ? [] : [{ id:"zip", label:"包成 .zip", primary:true }])] });
     if (r === "zip"){ data = await makeZip(name, blob); fname = name + ".zip"; } else if (r === "txt") fname = name + ".txt"; else return false;
   }
-  try { await dl.save({ filename:fname, data }); }
+  try { const r = await dl.save({ filename:fname, data, path: asNew ? null : t.path }); if (r && r.path){ t.path = r.path; name = fname = r.filename; } }
   catch(e){ const code = e && e.code; toast(code === "declined" ? "已取消儲存" : code === "rate_limited" ? "已有一個儲存對話框開著，請先處理" : "無法儲存：" + ((e && e.message) || code || "未知錯誤")); return false; }
   s.buf = new HexBuf(blob); s.clean = s.buf.pieces; s.undo = []; s.redo = []; s.version++; s.lastEdit = null; t.name = name;
   renderTabs(); if (hx.tab === t){ hx.sig = ""; hexRefresh(); } persistSoon(); toast("已儲存 " + fname); return true;

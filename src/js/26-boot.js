@@ -22,5 +22,6 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) persi
 if (window.__PP_TEST) window.__plainpad = { A, run, md, renderMd, hx, makeHexTab, addTab, makeZip, persist, hexFindNext, hexRender, tabs: () => tabs, cmMain, cm2, cmp, split, macro, settings, playMacro, startCompare, showResults };
 session.ready = true;
 if (session.primary){ storageCleanup(); persistSoon(); }
+if (NATIVE) nativeReady();
 setTimeout(() => focusEditor(), 50);
 })();
