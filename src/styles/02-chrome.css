@@ -9,6 +9,9 @@
 .menu-btn{background:none;border:0;padding:5px 9px;border-radius:var(--r-s);white-space:nowrap;flex:none;color:var(--fg);transition:background-color var(--ease),color var(--ease)}
 .menu-btn:hover{background:var(--chrome-2);color:var(--fg)}
 .menu-btn[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink)}
+.menu-pop.menu-cols{column-gap:6px;width:min(680px,calc(100vw - 16px));max-width:none}
+.menu-cols .menu-group{break-after:avoid}
+.menu-cols .menu-item,.menu-cols .menu-sep{break-inside:avoid}
 .menu-pop{position:fixed;z-index:80;min-width:250px;max-width:min(420px,calc(100vw - 16px));max-height:calc(100vh - 24px);overflow:auto;background:var(--pop);border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px var(--shadow-2),0 14px 36px -8px var(--shadow);padding:5px;animation:pop-in .12s ease-out}
 @keyframes pop-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 .menu-item{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:6px;width:100%;text-align:left;background:none;border:0;padding:5px 10px 5px 7px;border-radius:var(--r-s);white-space:nowrap;color:var(--fg)}

@@ -7,6 +7,11 @@
 const FG_LOOKBACK = 400;   // blocks that start this many lines above the viewport still get their guide drawn
 // The XML mode declares no fold helper of its own; tags fold in XML, HTML and the JSX parts of JS/TS through this one.
 CodeMirror.registerGlobalHelper("fold", "xmlTags", mode => mode.name === "xml", CodeMirror.fold.xml);
+/* Modes that name no folding of their own (SQL, Lua, Perl, Nginx and others) fold by braces, then by indentation.
+   Plain text stays unfoldable. */
+CodeMirror.registerGlobalHelper("fold", "fallback",
+  mode => !mode.fold && mode.name !== "null" && mode.name !== "xml" && !(CodeMirror.helpers.fold && CodeMirror.helpers.fold[mode.name]),
+  (cm, start) => CodeMirror.fold.brace(cm, start) || CodeMirror.fold.indent(cm, start));
 function fgFoldedAt(cm, line){
   for (const m of cm.findMarks(Pos(line, 0), Pos(line + 1, 0))){ if (!m.__isFold) continue; const f = m.find(-1); if (f && f.line === line) return true; }
   return false;

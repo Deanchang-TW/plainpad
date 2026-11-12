@@ -17,7 +17,8 @@ const CODE_MIME = { c:"text/x-csrc", h:"text/x-csrc", cpp:"text/x-c++src", "c++"
   xml:"application/xml", svg:"application/xml", xaml:"application/xml", css:"text/css", scss:"text/x-scss", sql:"text/x-sql", tsql:"text/x-mssql", mssql:"text/x-mssql", "t-sql":"text/x-mssql",
   mysql:"text/x-mysql", pgsql:"text/x-pgsql", postgres:"text/x-pgsql", postgresql:"text/x-pgsql", py:"text/x-python", python:"text/x-python", go:"text/x-go", golang:"text/x-go",
   sh:"text/x-sh", bash:"text/x-sh", shell:"text/x-sh", zsh:"text/x-sh", console:"text/x-sh", yaml:"text/x-yaml", yml:"text/x-yaml",
-  ini:"text/x-properties", toml:"text/x-properties", properties:"text/x-properties", env:"text/x-properties", md:"text/x-markdown", markdown:"text/x-markdown" };
+  ini:"text/x-properties", properties:"text/x-properties", env:"text/x-properties", md:"text/x-markdown", markdown:"text/x-markdown" };
+for (const l of LANGS) for (const k of [l.id, ...l.ext, ...(l.alias || [])]) if (!(k in CODE_MIME) && l.id !== "text") CODE_MIME[k] = l.mode;
 const LIB = { katex:"vendor/katex-0.19.1.min.js", mermaid:"vendor/mermaid-12.2.0.min.js" };
 const libLoads = {};
 function loadLib(name, globalName){

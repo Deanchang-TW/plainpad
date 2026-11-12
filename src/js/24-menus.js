@@ -36,7 +36,9 @@ const MENUS = [
     "#存檔時使用的編碼（轉換為）", ...ENCODINGS.map(([e, l]) => ({ label:l, checked: normEnc(t.encoding) === e, radio:true, fn: () => A.convertTo(e) })),
     it("加上 BOM", "toggleBom", null, { checked: t.bom && bomCapable(normEnc(t.encoding)), disabled: !bomCapable(normEnc(t.encoding)) }),
     "#行尾格式", ...["CRLF","LF","CR"].map(k => ({ label: EOL_LABEL[k], checked: t.eol === k, radio:true, fn: () => A.setEol(k) })) ]; } },
-  { label:"語言", items: () => hexActive() ? ["!Hex 分頁不適用"] : LANGS.map(l => ({ label:l.label, checked: curT().langId === l.id, radio:true, fn: () => setLang(curT(), l.id) })) },
+  { label:"語言", cols:3, items: () => hexActive() ? ["!Hex 分頁不適用"] : LANGS.flatMap((l, i) => [
+    ...(i === 0 || LANGS[i - 1].group !== l.group ? ["#" + l.group] : []),
+    { label:l.label, checked: curT().langId === l.id, radio:true, fn: () => setLang(curT(), l.id) }]) },
   { label:"設定", items: () => [
     { label:"輸入時提示自動完成", checked: settings.autoComplete, fn: () => setSetting("autoComplete", !settings.autoComplete) },
     { label:"自動補上括號與引號", checked: settings.autoClose, fn: () => setSetting("autoClose", !settings.autoClose) },
@@ -117,6 +119,7 @@ function openMenu(i){
   closeMenu();
   const btn = $("#menuBtn" + i); btn.scrollIntoView({ block:"nearest", inline:"nearest" });
   const pop = buildPop(MENUS[i].items(), i); pop.setAttribute("aria-labelledby", btn.id);
+  if (MENUS[i].cols && pop.querySelector(".menu-item")){ pop.classList.add("menu-cols"); pop.style.columnCount = MENUS[i].cols; }
   const r = btn.getBoundingClientRect(); placePop(pop, r.left, r.bottom + 2, true);
   btn.setAttribute("aria-expanded", "true"); openMenuIdx = i;
 }
@@ -149,7 +152,11 @@ document.querySelectorAll(".tool[data-act]").forEach(b => {
   b.addEventListener("click", () => { run(b.dataset.act); if (!["find","replace","findInFiles","openFile","openHex","toggleHex","save","saveAll","compare","macroMulti","macroRec"].includes(b.dataset.act)) focusEditor(); });
 });
 const langSel = $("#stLang");
-LANGS.forEach(l => langSel.appendChild(el("option", { value:l.id, text:l.label })));
+for (const l of LANGS){
+  let g = langSel.lastElementChild;
+  if (!g || g.label !== l.group){ g = el("optgroup"); g.label = l.group; langSel.appendChild(g); }
+  g.appendChild(el("option", { value:l.id, text:l.label }));
+}
 langSel.addEventListener("change", () => { setLang(curT(), langSel.value); focusEditor(); });
 $("#stEol").addEventListener("click", () => { const order = ["LF","CRLF","CR"]; A.setEol(order[(order.indexOf(curT().eol) + 1) % 3]); });
 $("#stEnc").addEventListener("click", e => { e.stopPropagation(); openMenu(MENUS.findIndex(m => m.label === "編碼")); });

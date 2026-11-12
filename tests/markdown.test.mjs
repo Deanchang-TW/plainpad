@@ -24,6 +24,12 @@ async function preview(p, text, name){
 }
 
 export default [
+  { name: "code blocks in the newly added languages are highlighted", async fn({ open }){
+    const p = await open();
+    await preview(p, "```rust\nfn main() {}\n```\n\n```swift\nlet x = 1\n```\n\n```dockerfile\nFROM node:20\n```\n", "a.md");
+    const kw = await p.evaluate(() => [...document.querySelectorAll("#mdBody pre code")].map(c => c.querySelectorAll(".cm-keyword").length > 0));
+    assert.deepEqual(kw, [true, true, true]);
+  }},
   { name: "renders GFM, highlights code and strips scripts", async fn({ open }){
     const p = await open();
     await preview(p, SPEC, "spec.md");

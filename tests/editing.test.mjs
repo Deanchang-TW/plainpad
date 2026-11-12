@@ -33,6 +33,40 @@ export default [
     assert.equal(await p.evaluate(() => [...document.querySelectorAll("#stLang option")].find(o => o.value === "tsx").textContent), "TypeScript (TSX)");
   }},
 
+  { name: "files pick their language by extension or by whole name, and every language loads", async fn({ open }){
+    const p = await open();
+    const files = { "main.rs":"rust", "App.swift":"swift", "main.dart":"dart", "Gemfile":"ruby", "Dockerfile.dev":"docker", "CMakeLists.txt":"cmake",
+      "nginx.conf":"nginx", "build.gradle":"groovy", "deploy.ps1":"ps", "Cargo.toml":"toml", "pubspec.lock":"yaml", "init.lua":"lua", "notes.txt":"text" };
+    await p.setInputFiles("#fileInput", Object.keys(files).map(name => ({ name, mimeType:"text/plain", buffer: Buffer.from("x\n") })));
+    await p.waitForFunction(n => window.__plainpad.tabs().length >= n, Object.keys(files).length + 2);
+    const got = await p.evaluate(() => Object.fromEntries(window.__plainpad.tabs().map(t => [t.name, t.langId])));
+    for (const [name, id] of Object.entries(files)) assert.equal(got[name], id, name);
+
+    /* Every language's mode is in the bundle: none falls back to plain text. */
+    const missing = await p.evaluate(() => { const sel = document.querySelector("#stLang"), cm = window.__plainpad.cmMain;
+      return [...sel.querySelectorAll("option")].filter(o => o.value !== "text").filter(o => { sel.value = o.value; sel.dispatchEvent(new Event("change")); return cm.getMode().name === "null"; }).map(o => o.value); });
+    assert.deepEqual(missing, []);
+    const r = await p.evaluate(() => { const A = window.__plainpad; A.A.newTab(); A.cmMain.setValue("fn main() {\n    let x = 1;\n}\n");
+      const sel = document.querySelector("#stLang"); sel.value = "rust"; sel.dispatchEvent(new Event("change"));
+      return { mode: A.cmMain.getMode().name, kw: A.cmMain.getTokenTypeAt({ line:0, ch:1 }), groups: [...sel.querySelectorAll("optgroup")].map(g => g.label).length }; });
+    assert.equal(r.mode, "rust"); assert.match(r.kw || "", /keyword/); assert.equal(r.groups, 8, "the status-bar list is grouped");
+
+    /* The 語言 menu shows its groups in columns. */
+    await p.click("#menubar .menu-btn:nth-child(6)");
+    assert.deepEqual(await p.evaluate(() => { const pop = document.querySelector(".menu-pop"); return [pop.classList.contains("menu-cols"), [...pop.querySelectorAll(".menu-group")].map(g => g.textContent).includes("資料庫")]; }), [true, true]);
+    await p.keyboard.press("Escape");
+    assert.deepEqual(p.errors, []);
+  }},
+
+  { name: "languages without folding of their own fold by braces or indentation", async fn({ open }){
+    const p = await open();
+    await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("function f()\n  local x = 1\n  return x\nend\nprint(f())"); const sel = document.querySelector("#stLang"); sel.value = "lua"; sel.dispatchEvent(new Event("change")); }));
+    await p.waitForFunction(() => document.querySelector(".CodeMirror-code > div .fg-s"));
+    await p.evaluate(P(A => { A.cmMain.setValue("SELECT a,\n       b\nFROM t\nWHERE x IN (\n  1,\n  2\n);"); const sel = document.querySelector("#stLang"); sel.value = "mssql"; sel.dispatchEvent(new Event("change")); }));
+    await p.waitForFunction(() => [...document.querySelectorAll(".CodeMirror-code > div")][3]?.querySelector(".fg-s"), null, { timeout: 3000 });
+    assert.equal(await p.evaluate(P(A => A.cmMain.getMode().name)), "sql");
+  }},
+
   { name: "fold guides mark block start, body and end, and a click folds the block", async fn({ open }){
     const p = await open();
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("function a(){\n  if (x){\n    y();\n  }\n  z();\n}\nlast();"); A.cmMain.setOption("mode", "text/javascript"); }));

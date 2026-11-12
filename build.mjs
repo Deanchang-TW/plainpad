@@ -16,6 +16,13 @@ const CM_FILES = [
   "lib/codemirror",
   "mode/clike/clike", "mode/javascript/javascript", "mode/jsx/jsx", "mode/xml/xml", "mode/css/css", "mode/htmlmixed/htmlmixed", "mode/sql/sql",
   "mode/python/python", "mode/go/go", "mode/markdown/markdown", "mode/shell/shell", "mode/yaml/yaml", "mode/properties/properties",
+  "addon/mode/simple", "addon/mode/overlay",
+  "mode/php/php", "mode/sass/sass", "mode/jinja2/jinja2", "mode/stex/stex", "mode/rst/rst", "mode/diff/diff",
+  "mode/swift/swift", "mode/dart/dart", "mode/rust/rust", "mode/groovy/groovy", "mode/vb/vb", "mode/pascal/pascal", "mode/fortran/fortran",
+  "mode/cobol/cobol", "mode/gas/gas", "mode/ruby/ruby", "mode/perl/perl", "mode/lua/lua", "mode/r/r", "mode/julia/julia",
+  "mode/powershell/powershell", "mode/vbscript/vbscript", "mode/tcl/tcl", "mode/haskell/haskell", "mode/erlang/erlang", "mode/clojure/clojure",
+  "mode/mllike/mllike", "mode/toml/toml", "mode/dockerfile/dockerfile", "mode/nginx/nginx", "mode/cmake/cmake", "mode/protobuf/protobuf",
+  "mode/gherkin/gherkin", "mode/verilog/verilog", "mode/vhdl/vhdl",
   "addon/fold/foldcode", "addon/fold/brace-fold", "addon/fold/xml-fold", "addon/fold/indent-fold", "addon/fold/comment-fold", "addon/fold/markdown-fold",
   "addon/edit/matchbrackets", "addon/edit/closebrackets", "addon/selection/active-line", "addon/search/match-highlighter",
   "addon/comment/comment", "addon/hint/show-hint", "addon/hint/anyword-hint", "addon/runmode/runmode"

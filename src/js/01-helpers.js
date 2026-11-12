@@ -1,9 +1,12 @@
 /* ---------- helpers ---------- */
 function extOf(name){ const m = /\.([^./\\]+)$/.exec(name || ""); return m ? m[1].toLowerCase() : ""; }
-function langForName(name){ const e = extOf(name); const base = (name||"").toLowerCase();
-  for (const l of LANGS) if (l.ext.includes(e) || l.ext.includes(base.replace(/^\./,""))) return l.id;
-  if (base === "dockerfile" || base === "makefile") return "sh";
-  return "text"; }
+function langForName(name){
+  const base = (name || "").toLowerCase().replace(/^\./, ""), e = extOf(name);
+  for (const l of LANGS) if (l.ext.includes(base)) return l.id;
+  if (/^(docker|container)file[.-]/.test(base)) return "docker";
+  for (const l of LANGS) if (l.ext.includes(e)) return l.id;
+  return "text";
+}
 function eolStats(t){ const crlf = (t.match(/\r\n/g) || []).length, cr = (t.match(/\r(?!\n)/g) || []).length, lf = (t.match(/(?<!\r)\n/g) || []).length; return { CRLF:crlf, CR:cr, LF:lf }; }
 function detectEol(t){ const n = eolStats(t); return n.CRLF >= n.LF && n.CRLF >= n.CR && n.CRLF ? "CRLF" : n.CR > n.LF ? "CR" : "LF"; }
 function mixedEolNote(t){ const n = eolStats(t), kinds = Object.entries(n).filter(([, v]) => v); if (kinds.length < 2) return ""; return kinds.map(([k, v]) => `${k} ${fmtNum(v)} 行`).join("、"); }
