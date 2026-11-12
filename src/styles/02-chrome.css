@@ -6,7 +6,7 @@
 .brand-mark{width:22px;height:22px;flex:none;border-radius:6.5px;box-shadow:0 1px 2px var(--shadow-2),0 0 0 .5px color-mix(in srgb,var(--accent) 35%,transparent)}
 .menubar{display:flex;align-items:center;gap:1px;min-width:0;overflow-x:auto;scrollbar-width:none}
 .menubar::-webkit-scrollbar{display:none}
-.menu-btn{background:none;border:0;padding:5px 9px;border-radius:var(--r-s);white-space:nowrap;flex:none;color:var(--fg-2);font-weight:500;transition:background-color var(--ease),color var(--ease)}
+.menu-btn{background:none;border:0;padding:5px 9px;border-radius:var(--r-s);white-space:nowrap;flex:none;color:var(--fg);transition:background-color var(--ease),color var(--ease)}
 .menu-btn:hover{background:var(--chrome-2);color:var(--fg)}
 .menu-btn[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink)}
 .menu-pop{position:fixed;z-index:80;min-width:250px;max-width:min(420px,calc(100vw - 16px));max-height:calc(100vh - 24px);overflow:auto;background:var(--pop);border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px var(--shadow-2),0 14px 36px -8px var(--shadow);padding:5px;animation:pop-in .12s ease-out}
@@ -18,14 +18,14 @@
 .menu-item[disabled]:hover{background:none;color:var(--fg)}
 .menu-item .chk{color:var(--accent);font-weight:700;text-align:center;font-size:12px}
 .menu-item .lbl{overflow:hidden;text-overflow:ellipsis}
-.menu-item kbd{font:11.5px var(--ui);color:var(--muted);padding-left:18px;letter-spacing:.02em}
+.menu-item kbd{font:12px var(--ui);color:var(--muted);padding-left:18px}
 .menu-sep{height:1px;background:var(--line-soft);margin:5px 8px}
 .menu-group{font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--muted);padding:7px 10px 3px 31px}
 .menu-empty{color:var(--muted);padding:4px 10px 6px 31px;font-size:12px}
 
 .tools{display:flex;align-items:center;justify-content:flex-start;gap:1px;min-height:36px;padding-bottom:4px;overflow-x:auto;scrollbar-width:none}
 .tools::-webkit-scrollbar{display:none}
-.tool{width:32px;height:30px;display:grid;place-items:center;background:none;border:0;border-radius:7px;color:var(--fg-2);flex:none;transition:background-color var(--ease),color var(--ease),transform var(--ease)}
+.tool{width:32px;height:30px;display:grid;place-items:center;background:none;border:0;border-radius:7px;color:var(--fg);flex:none;transition:background-color var(--ease),color var(--ease),transform var(--ease)}
 .tool:hover{background:var(--chrome-2);color:var(--fg)}
 .tool:active{transform:translateY(.5px)}
 .tool[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}
@@ -57,3 +57,22 @@
 .tab.drop-before{box-shadow:inset 2px 0 0 var(--accent)}
 .newtab{width:28px;height:28px;border:0;background:none;border-radius:var(--r-s);color:var(--muted);font-size:18px;flex:none;margin-left:2px;align-self:center;transition:background-color var(--ease),color var(--ease)}
 .newtab:hover{background:var(--chrome-2);color:var(--fg)}
+
+/* toolbar icon styles: data-icons="mono" draws every icon in the text colour; "color" (default) gives each button its own hue
+   (--ic) with a tinted fill on the main shape (.f). Pressed buttons keep their own hue instead of the accent. */
+:root{--ic-blue:#3b78d8;--ic-amber:#d9901c;--ic-green:#1f9e5c;--ic-red:#d9483b;--ic-purple:#7d55d4;--ic-teal:#1b95a9;--ic-pink:#cc4590;--ic-slate:#5d7088}
+:root[data-pad-theme="dark"],:root[data-theme="dark"]{--ic-blue:#7cabff;--ic-amber:#f2b85c;--ic-green:#52cc92;--ic-red:#ff8577;--ic-purple:#b89cff;--ic-teal:#5fcbe0;--ic-pink:#f08ac1;--ic-slate:#9fb0c3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]):not([data-pad-theme="light"]){--ic-blue:#7cabff;--ic-amber:#f2b85c;--ic-green:#52cc92;--ic-red:#ff8577;--ic-purple:#b89cff;--ic-teal:#5fcbe0;--ic-pink:#f08ac1;--ic-slate:#9fb0c3}}
+.tool[data-act="newTab"],.tool[data-act="save"],.tool[data-act="saveAll"],.tool[data-act="bmToggle"],.tool[data-act="mdPreview"]{--ic:var(--ic-blue)}
+.tool[data-act="openFile"],.tool[data-act="findInFiles"],.tool[data-act="compare"],.tool[data-act="cycleTheme"]{--ic:var(--ic-amber)}
+.tool[data-act="closeActive"],.tool[data-act="macroRec"]{--ic:var(--ic-red)}
+.tool[data-act="undo"],.tool[data-act="redo"],.tool[data-act="toggleSplit"],.tool[data-act="toggleSync"]{--ic:var(--ic-teal)}
+.tool[data-act="find"],.tool[data-act="replace"],.tool[data-act="zoomIn"],.tool[data-act="zoomOut"],.tool[data-act="toggleHex"]{--ic:var(--ic-purple)}
+.tool[data-act="toggleWrap"],.tool[data-act="toggleWs"]{--ic:var(--ic-slate)}
+.tool[data-act="macroPlay"],.tool[data-act="macroMulti"]{--ic:var(--ic-green)}
+:root[data-icons="color"] .tool{color:var(--ic,var(--fg))}
+:root[data-icons="color"] .tool svg .f{fill:color-mix(in srgb,currentColor 22%,transparent)}
+:root[data-icons="color"] .tool:hover{color:var(--ic,var(--fg))}
+:root[data-icons="color"] .tool[aria-pressed="true"]{color:var(--ic,var(--accent));background:color-mix(in srgb,var(--ic,var(--accent)) 14%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ic,var(--accent)) 35%,transparent)}
+:root[data-icons="color"] .tool[aria-pressed="true"] svg .f{fill:color-mix(in srgb,currentColor 32%,transparent)}
+:root[data-icons="color"] .tool.is-rec{color:var(--danger)}

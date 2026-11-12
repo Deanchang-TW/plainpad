@@ -12,6 +12,7 @@ function applySettings(){
   $("#paper").classList.toggle("ws-on", settings.ws);
   document.documentElement.style.setProperty("--editor-size", settings.fontSize + "px");
   if (settings.theme === "system") delete document.documentElement.dataset.padTheme; else document.documentElement.dataset.padTheme = settings.theme;
+  document.documentElement.dataset.icons = settings.icons === "mono" ? "mono" : "color";
   $("#tWrap").setAttribute("aria-pressed", String(settings.wrap));
   $("#tWs").setAttribute("aria-pressed", String(settings.ws));
   cmMain.refresh(); if (!$("#pane2").hidden) cm2.refresh();
@@ -21,4 +22,5 @@ function applySettings(){
 }
 function setSetting(k, v){ settings[k] = v; applySettings(); persistSoon(); }
 const THEME_LABEL = { system:"跟隨系統", light:"淺色", dark:"深色" };
+const ICON_LABEL = { color:"彩色", mono:"單色" };
 

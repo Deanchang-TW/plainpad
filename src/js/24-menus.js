@@ -42,7 +42,8 @@ const MENUS = [
     { label:"自動補上括號與引號", checked: settings.autoClose, fn: () => setSetting("autoClose", !settings.autoClose) },
     { label:"標示與選取相同的單字", checked: settings.smartHighlight, fn: () => setSetting("smartHighlight", !settings.smartHighlight) },
     it("用 Tab 字元縮排", "useTabs", null, { checked: settings.useTabs }),
-    "#Tab 寬度", ...[2, 4, 8].map(n => ({ label: n + " 個空白", checked: settings.tabSize === n, radio:true, fn: () => setSetting("tabSize", n) })) ] },
+    "#Tab 寬度", ...[2, 4, 8].map(n => ({ label: n + " 個空白", checked: settings.tabSize === n, radio:true, fn: () => setSetting("tabSize", n) })),
+    "#工具列圖示", ...["color","mono"].map(k => ({ label: ICON_LABEL[k], checked: (settings.icons === "mono" ? "mono" : "color") === k, radio:true, fn: () => setSetting("icons", k) })) ] },
   { label:"工具", items: () => [
     it(cmp.on ? "結束比較" : "比較兩個分頁…", "compare"), it("下一個差異", "cmpNext", null, { disabled: !cmp.on }), it("上一個差異", "cmpPrev", null, { disabled: !cmp.on }),
     "-", it("JSON 格式化", "jsonFmt"), it("JSON 壓縮成一行", "jsonMin"),

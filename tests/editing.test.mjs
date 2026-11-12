@@ -12,6 +12,16 @@ export default [
     assert.deepEqual(p.errors, []);
   }},
 
+  { name: "toolbar icon style switches to mono from the settings menu and survives a reload", async fn({ open }){
+    const p = await open();
+    assert.equal(await p.evaluate(() => document.documentElement.dataset.icons), "color", "colour icons by default");
+    assert.ok(await p.locator(".tools .tool svg .f").count() > 10, "icons carry a fill shape for the colour style");
+    await p.click(".menu-btn:has-text(\"設定\")"); await p.click(".menu-pop .menu-item:has-text(\"單色\")");
+    assert.equal(await p.evaluate(() => document.documentElement.dataset.icons), "mono");
+    await p.waitForTimeout(1000); await p.reload(); await p.waitForSelector("#tabs .tab");
+    assert.equal(await p.evaluate(() => document.documentElement.dataset.icons), "mono", "the choice is stored with the other settings");
+  }},
+
   { name: "macro records typing and cursor keys, then runs to end of file", async fn({ open }){
     const p = await open();
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("alpha\nbeta\ngamma"); A.cmMain.setCursor(0, 0); A.cmMain.focus(); }));
