@@ -2,6 +2,7 @@
 //   Contents/MacOS/Plainpad          compiled from macos/Sources/*.swift (Cocoa + WebKit, no other dependencies)
 //   Contents/Resources/web/          the same page as dist/test/prod.html with its vendor/ files, served from plainpad://app/
 //   Contents/Resources/Plainpad.icns rendered from macos/icon.svg with the test browser, then packed with iconutil
+//   Contents/Resources/*.lproj       from macos/Resources: localized names for the document types in Info.plist
 // Usage: node build-mac.mjs [--universal]     (--universal also builds x86_64 and merges with lipo)
 // Needs Xcode or the Command Line Tools (swiftc). The app is ad-hoc signed, which is enough to run on this machine.
 import { execFileSync } from "node:child_process";
@@ -24,6 +25,10 @@ copyFileSync(at("dist/test/prod.html"), res + "web/index.html");
 for (const f of readdirSync(at("dist/artifact/vendor/"))) copyFileSync(at("dist/artifact/vendor/" + f), res + "web/vendor/" + f);
 writeFileSync(contents + "Info.plist", readFileSync(at("macos/Info.plist"), "utf8").replaceAll("__VERSION__", pkg.version));
 writeFileSync(contents + "PkgInfo", "APPL????");
+for (const d of readdirSync(at("macos/Resources/")).filter(d => d.endsWith(".lproj"))){
+  mkdirSync(res + d, { recursive: true });
+  for (const f of readdirSync(at("macos/Resources/" + d))) copyFileSync(at(`macos/Resources/${d}/${f}`), res + d + "/" + f);
+}
 
 /* Icon: one 1024 px render, scaled down by sips for the other sizes. */
 const iconset = at("dist/mac/Plainpad.iconset/");

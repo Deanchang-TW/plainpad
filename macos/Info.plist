@@ -11,6 +11,9 @@
   <key>CFBundleVersion</key><string>__VERSION__</string>
   <key>CFBundleIconFile</key><string>Plainpad</string>
   <key>CFBundleDevelopmentRegion</key><string>zh_TW</string>
+  <!-- The interface languages of src/i18n; Resources/<lang>.lproj/InfoPlist.strings translate the document type names. -->
+  <key>CFBundleLocalizations</key>
+  <array><string>zh-Hant</string><string>en</string><string>zh-Hans</string><string>vi</string></array>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
   <key>NSPrincipalClass</key><string>NSApplication</string>

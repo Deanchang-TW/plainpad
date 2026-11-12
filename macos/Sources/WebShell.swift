@@ -10,6 +10,7 @@ import WebKit
 ///   { type: "openPanel" }                                 show NSOpenPanel
 ///   { type: "save", filename, path, data (base64) }       write the file; reply { status, path, filename }
 ///   { type: "title", name, path, dirty }                  the active tab changed; shown in the window title bar
+///   { type: "locale", lang, choice }                     the interface language, and whether it was chosen or "auto"
 ///   { type: "watch", files: [{ path, mtime }] }           the files the tabs came from, with the modification time the
 ///                                                         page last saw (null: unknown, take the file's current one)
 /// The app calls back into the page through `window.__ppNative.run(name)`, `.open(items)`, `.changed(items)` and
@@ -32,6 +33,8 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
     /// the app becomes active; a difference is reported to the page once.
     private var watched: [String: Double] = [:]
     private var watchTimer: Timer?
+    /// Called with the page's interface language and the setting behind it ("auto" or a language).
+    var onLocale: ((String, String) -> Void)?
 
     override init() {
         webRoot = Bundle.main.resourceURL!.appendingPathComponent("web", isDirectory: true)
@@ -104,6 +107,9 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
             replyHandler(nil, nil)
             let urls = pendingOpen; pendingOpen = []
             open(urls)
+        case "locale":
+            replyHandler(nil, nil)
+            if let lang = body["lang"] as? String { onLocale?(lang, (body["choice"] as? String) ?? "auto") }
         case "openPanel":
             replyHandler(nil, nil)
             showOpenPanel()
