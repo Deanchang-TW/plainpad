@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { MOD, SPOOFED } from "./platform.mjs";
 import { join } from "node:path";
 import { crc32 } from "node:zlib";
 
@@ -30,9 +31,9 @@ export default [
     await p.keyboard.press("Insert"); await p.keyboard.type("abcd");
     assert.deepEqual(await head(p), { hex:"4d5affabcd00030000000001", size:1172, cur:5, anchor:5, dirty:true });
     await p.keyboard.press("Backspace"); assert.equal((await head(p)).size, 1171);
-    await p.keyboard.press("Control+z"); await p.keyboard.press("Control+z");
+    await p.keyboard.press(`${MOD}+z`); await p.keyboard.press(`${MOD}+z`);
     assert.deepEqual(await head(p), { hex:"4d5a90000300000000010203", size:1170, cur:2, anchor:2, dirty:false });
-    await p.keyboard.press("Control+Shift+z"); assert.equal((await head(p)).hex, "4d5affabcd00030000000001");
+    await p.keyboard.press(`${MOD}+Shift+z`); assert.equal((await head(p)).hex, "4d5affabcd00030000000001");
     await p.keyboard.press("Insert"); await p.keyboard.press("Tab"); await p.keyboard.type("Hi");
     assert.equal((await head(p)).hex, "4d5affabcd48690000000001", "typing in the text column");
   }},
@@ -62,14 +63,15 @@ export default [
 
   { name: "clipboard: paste hex, copy as hex and C array, cut", async fn({ open, fixtures }){
     const p = await open({ clipboard: true }); await openSample(p, fixtures);
-    await p.evaluate(() => navigator.clipboard.writeText("0xDE, 0xAD, 0xBE, 0xEF")); await p.keyboard.press("Control+v");
+    if (SPOOFED) await p.evaluate(t => { const dt = new DataTransfer(); dt.setData("text/plain", t);   // no native paste when spoofing the platform
+      document.querySelector("#hexInput").dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true })); }, "0xDE, 0xAD, 0xBE, 0xEF");
+    else { await p.evaluate(() => navigator.clipboard.writeText("0xDE, 0xAD, 0xBE, 0xEF")); await p.keyboard.press(`${MOD}+v`); }
     assert.equal((await head(p, 6)).hex, "deadbeef0300");
-    await p.keyboard.press("Control+Home"); for (let i = 0; i < 4; i++) await p.keyboard.press("Shift+ArrowRight");
-    await p.keyboard.press("Control+c"); await p.waitForTimeout(100);
-    assert.equal(await p.evaluate(() => navigator.clipboard.readText()), "DE AD BE EF");
+    await p.keyboard.press(`${MOD}+Home`); for (let i = 0; i < 4; i++) await p.keyboard.press("Shift+ArrowRight");
+    if (!SPOOFED){ await p.keyboard.press(`${MOD}+c`); await p.waitForTimeout(100); assert.equal(await p.evaluate(() => navigator.clipboard.readText()), "DE AD BE EF"); }
     await p.evaluate(() => window.__plainpad.run("hexCopyC")); await p.waitForTimeout(150);
     assert.equal(await p.evaluate(() => navigator.clipboard.readText()), "unsigned char data[4] = {\n    0xDE, 0xAD, 0xBE, 0xEF\n};");
-    await p.click('#hexRows .hb[data-i="0"]'); await p.keyboard.press("Shift+ArrowRight"); await p.keyboard.press("Control+x"); await p.waitForTimeout(100);
+    await p.click('#hexRows .hb[data-i="0"]'); await p.keyboard.press("Shift+ArrowRight"); await p.keyboard.press(`${MOD}+x`); await p.waitForTimeout(100);
     assert.deepEqual(await head(p, 4), { hex:"adbeef03", size:1169, cur:0, anchor:0, dirty:true });
   }},
 
@@ -84,7 +86,7 @@ export default [
 
   { name: "saving a .bin offers a ZIP whose content is the edited file", async fn({ open, fixtures, saves }){
     const p = await open(); await openSample(p, fixtures);
-    await p.keyboard.type("00"); await p.keyboard.press("Control+s");
+    await p.keyboard.type("00"); await p.keyboard.press(`${MOD}+s`);
     assert.match(await p.textContent("#modalTitle"), /無法用原本的副檔名下載/);
     await p.click("#modalActions .btn-primary"); await p.waitForTimeout(300);
     const [s] = await saves(p); assert.equal(s.filename, "sample.bin.zip");
@@ -108,9 +110,9 @@ export default [
       A.addTab(A.makeHexTab({ name:"big.dat", blob:new Blob(parts) })); });
     await p.waitForTimeout(300);
     assert.equal(await p.evaluate(() => window.__plainpad.hx.scaled), true);
-    await p.click('#hexRows .hb[data-i="0"]'); await p.keyboard.press("Control+End"); await p.waitForTimeout(300);
+    await p.click('#hexRows .hb[data-i="0"]'); await p.keyboard.press(`${MOD}+End`); await p.waitForTimeout(300);
     assert.match(await p.textContent("#stPos"), /0x20000007/);
-    await p.keyboard.press("Control+Home"); await p.keyboard.type("EE");
+    await p.keyboard.press(`${MOD}+Home`); await p.keyboard.type("EE");
     await p.click('#hxFindMode button[data-m="text"]'); await p.fill("#hxFind", "NEEDLE!"); await p.keyboard.press("Enter");
     await p.waitForFunction(() => /找到|找不到/.test(document.querySelector("#hxInfo").textContent), null, { timeout: 60000 });
     assert.equal(await p.textContent("#hxInfo"), "找到：0x20000000");

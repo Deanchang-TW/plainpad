@@ -10,6 +10,7 @@ npm install          # 函式庫版本固定在 package.json / package-lock.json
 npm run build        # 產生 dist/
 npm test             # 建置後跑 32 項 Chromium 測試
 node tests/run.mjs hex      # 只跑名稱含「hex」的測試
+PP_PLATFORM=mac node tests/run.mjs   # 模擬 Mac 鍵盤（⌘）；在 Mac 上預設就是這樣
 ```
 
 測試需要 Chromium。工作環境有 `/opt/pw-browsers/chromium` 時會自動使用，其他環境請設定 `CHROMIUM_PATH`，

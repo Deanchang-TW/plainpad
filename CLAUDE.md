@@ -14,6 +14,9 @@ node build.mjs --compare <檔案>  # 逐位元組比對建置結果，用來證�
 
 本機第一次跑測試前要先執行 `npx playwright install chromium`。也可以用 `CHROMIUM_PATH` 指定瀏覽器。
 
+測試預設依執行的電腦選鍵盤：在 Mac 上按 ⌘，其他平台按 Ctrl。`PP_PLATFORM=mac` 或 `PP_PLATFORM=linux` 可以讓頁面假裝成另一個平台，
+用來在同一台機器上檢查兩種按鍵路徑。修改快速鍵或測試後，兩種都要跑：`node tests/run.mjs` 和 `PP_PLATFORM=mac node tests/run.mjs`。
+
 ## 程式碼結構
 
 - `src/js/*.js` 依檔名順序串接，包在同一個 IIFE 裡執行，**所有檔案共用同一個作用域**。
@@ -57,6 +60,9 @@ node build.mjs --compare <檔案>  # 逐位元組比對建置結果，用來證�
 - **測試**：
   - 行為改變時要同步新增或修改測試。
   - 測試失敗時先判斷是程式錯還是測試錯，修測試要說明原因。
+  - 測試裡按 App 快速鍵時，用 `tests/platform.mjs` 的 `MOD`，不要寫死 `Control`；App 在 Mac 上用 ⌘。
+    只有在 Mac 上本來就是 Ctrl 的快速鍵（⌃G 跳至行、⌃⇧M Markdown 預覽、⌃⇧H Hex 切換）才寫 `Control`。
+  - 依賴系統剪貼簿的步驟（原生的複製、貼上）在模擬平台時無法執行，用 `SPOOFED` 判斷。
   - 樣本檔和預期輸出放在 `tests/fixtures/`。編碼的預期輸出是用 Python codecs 產生的，不要用 App 自己的輸出當預期值。
 - **介面文字用繁體中文**，用使用者熟悉的說法，不要用系統內部的名詞。錯誤訊息要說明怎麼解決。
 - **commit**：

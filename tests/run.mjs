@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { chromium } from "playwright";
+import { PLATFORM, applyPlatform } from "./platform.mjs";
 
 const root = new URL("../", import.meta.url).pathname;
 const dist = join(root, "dist");
@@ -36,6 +37,7 @@ const ctxHelpers = {
   async open({ path = "/test/index.html", init, downloads = true, clipboard = false, viewport = { width:1360, height:860 }, context } = {}){
     const ctx = context || await browser.newContext({ viewport, permissions: clipboard ? ["clipboard-read", "clipboard-write"] : [] });
     if (!context){
+      await applyPlatform(ctx);
       await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
       if (downloads) await ctx.addInitScript(fakeDownloads);
       if (init) await ctx.addInitScript(init);
@@ -56,6 +58,7 @@ const ctxHelpers = {
 const filter = process.argv[2];
 const files = readdirSync(join(root, "tests")).filter(f => f.endsWith(".test.mjs")).sort();
 let passed = 0, failed = 0;
+console.log(`Keyboard: ${PLATFORM === "mac" ? "macOS (⌘)" : "Ctrl"}`);
 for (const f of files){
   const suite = (await import(join(root, "tests", f))).default;
   for (const t of suite){

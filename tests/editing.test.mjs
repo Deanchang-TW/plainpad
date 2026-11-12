@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { MOD } from "./platform.mjs";
 
 const P = fn => `(${fn})(window.__plainpad)`;   // page.evaluate(P(A => ...)) runs fn in the page with A = the test hook
 
@@ -38,7 +39,7 @@ export default [
   { name: "list all matches and jump to one", async fn({ open }){
     const p = await open();
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("foo bar\nbaz foo foo\nnone"); }));
-    await p.keyboard.press("Control+KeyF"); await p.fill("#findInput", "foo"); await p.click("#btnListCur");
+    await p.keyboard.press(`${MOD}+KeyF`); await p.fill("#findInput", "foo"); await p.click("#btnListCur");
     assert.equal(await p.locator(".res-row").count(), 2);
     assert.match(await p.textContent("#resTitle"), /3 筆/);
     await p.click(".res-row >> nth=1");
@@ -48,7 +49,7 @@ export default [
   { name: "bookmarks: keep only bookmarked lines", async fn({ open }){
     const p = await open();
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("one\ntwo\nthree"); A.cmMain.setCursor(1, 0); A.cmMain.focus(); }));
-    await p.keyboard.press("Control+F2");
+    await p.keyboard.press(`${MOD}+F2`);
     assert.equal(await p.locator(".bm-dot").count(), 1);
     await p.evaluate(P(A => A.A.bmKeepOnly()));
     assert.equal(await p.evaluate(P(A => A.cmMain.getValue())), "two");

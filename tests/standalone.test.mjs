@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { MOD, applyPlatform } from "./platform.mjs";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 
 /* The standalone file must work from disk with no network at all. */
 async function openStandalone(browser, dist){
   const ctx = await browser.newContext({ acceptDownloads: true, viewport: { width: 1360, height: 860 } });
+  await applyPlatform(ctx);
   const blocked = [];
   await ctx.route(/^https?:/, r => { blocked.push(r.request().url()); r.abort(); });
   const p = await ctx.newPage(); p.errors = []; p.on("pageerror", e => p.errors.push(e.message));
@@ -30,12 +32,12 @@ export default [
     const { p } = await openStandalone(browser, dist);
     await p.setInputFiles("#fileInput", join(fixtures, "sample.bin")); await p.waitForTimeout(300);
     await p.click('#hexRows .hb[data-i="0"]'); await p.keyboard.type("00");
-    const [dl] = await Promise.all([p.waitForEvent("download"), p.keyboard.press("Control+s")]);
+    const [dl] = await Promise.all([p.waitForEvent("download"), p.keyboard.press(`${MOD}+s`)]);
     assert.equal(dl.suggestedFilename(), "sample.bin");
     const bytes = readFileSync(await dl.path()), orig = readFileSync(join(fixtures, "sample.bin"));
     assert.equal(bytes.length, orig.length); assert.equal(bytes[0], 0); assert.deepEqual(bytes.subarray(1), orig.subarray(1));
     await p.setInputFiles("#fileInput", join(fixtures, "enc", "tw-big5.txt")); await p.waitForTimeout(200);
-    const [dl2] = await Promise.all([p.waitForEvent("download"), p.keyboard.press("Control+Shift+KeyS").then(async () => { await p.fill("#modalInput", "report.sql"); await p.keyboard.press("Enter"); })]);
+    const [dl2] = await Promise.all([p.waitForEvent("download"), p.keyboard.press(`${MOD}+Shift+KeyS`).then(async () => { await p.fill("#modalInput", "report.sql"); await p.keyboard.press("Enter"); })]);
     assert.equal(dl2.suggestedFilename(), "report.sql");
     assert.deepEqual(readFileSync(await dl2.path()), readFileSync(join(fixtures, "enc", "tw-big5.txt")), "Big5 bytes unchanged");
   }}

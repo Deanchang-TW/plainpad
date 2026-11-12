@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { MOD } from "./platform.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -12,7 +13,7 @@ async function openFile(p, path){
   return p.evaluate(() => { const A = window.__plainpad, t = A.tabs()[A.tabs().length - 1]; return { enc: t.encoding, eol: t.eol, status: document.querySelector("#stEnc").textContent, toast: document.querySelector("#toast").textContent }; });
 }
 async function save(p){
-  await p.keyboard.press("Control+s"); await p.waitForTimeout(200);
+  await p.keyboard.press(`${MOD}+s`); await p.waitForTimeout(200);
   if (await p.isVisible("#modal")) await p.click("#modalActions .btn-primary");
   await p.waitForTimeout(200);
 }
@@ -36,7 +37,7 @@ export default [
     const p = await open();
     await openFile(p, join(fixtures, "enc", "tw-big5.txt"));
     await p.evaluate(() => window.__plainpad.cmMain.replaceRange("笑😀", { line:0, ch:0 }));
-    await p.keyboard.press("Control+s"); await p.waitForTimeout(200);
+    await p.keyboard.press(`${MOD}+s`); await p.waitForTimeout(200);
     assert.match(await p.textContent("#modalTitle"), /有 1 個字元無法用 Big5 儲存/);
     await p.click("#modalActions .btn-primary"); await p.waitForTimeout(200);
     const [s] = await saves(p);
