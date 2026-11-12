@@ -22,6 +22,17 @@ export default [
     assert.equal(await p.evaluate(() => document.documentElement.dataset.icons), "mono", "the choice is stored with the other settings");
   }},
 
+  { name: "tsx files highlight JSX instead of treating it as a string", async fn({ open }){
+    const p = await open();
+    const src = "const App = () => {\n  return (\n    <div className=\"a\" style={{ backgroundImage: `url(${x})` }}>\n      {theme === 'dark' && <span>it's</span>}\n    </div>\n  );\n};\nconst after = 1;\n";
+    const r = await p.evaluate(src => { const A = window.__plainpad; A.A.newTab(); A.cmMain.setValue(src); A.cmMain.setOption("mode", "text/typescript-jsx");
+      return { tag: A.cmMain.getTokenTypeAt({ line:2, ch:5 }), kw: A.cmMain.getTokenTypeAt({ line:7, ch:2 }), attr: A.cmMain.getTokenTypeAt({ line:2, ch:10 }) }; }, src);
+    assert.match(r.tag || "", /tag/, "the <div> is a tag");
+    assert.match(r.kw || "", /keyword/, "code after the JSX is still parsed as code");
+    assert.match(r.attr || "", /attribute/, "className is an attribute");
+    assert.equal(await p.evaluate(() => [...document.querySelectorAll("#stLang option")].find(o => o.value === "tsx").textContent), "TypeScript (TSX)");
+  }},
+
   { name: "macro records typing and cursor keys, then runs to end of file", async fn({ open }){
     const p = await open();
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("alpha\nbeta\ngamma"); A.cmMain.setCursor(0, 0); A.cmMain.focus(); }));

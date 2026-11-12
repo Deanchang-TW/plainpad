@@ -12,8 +12,8 @@ function toggleMd(force){
 }
 function mdSoon(ms = 220){ if (!md.open) return; clearTimeout(md.timer); md.timer = setTimeout(renderMd, ms); }
 const CODE_MIME = { c:"text/x-csrc", h:"text/x-csrc", cpp:"text/x-c++src", "c++":"text/x-c++src", cc:"text/x-c++src", cs:"text/x-csharp", csharp:"text/x-csharp", "c#":"text/x-csharp",
-  java:"text/x-java", kotlin:"text/x-kotlin", kt:"text/x-kotlin", js:"text/javascript", javascript:"text/javascript", jsx:"text/javascript", mjs:"text/javascript",
-  ts:"text/typescript", typescript:"text/typescript", tsx:"text/typescript", json:"application/json", jsonc:"application/json", html:"htmlmixed", htm:"htmlmixed", vue:"htmlmixed",
+  java:"text/x-java", kotlin:"text/x-kotlin", kt:"text/x-kotlin", js:"text/javascript", javascript:"text/javascript", jsx:"text/jsx", mjs:"text/javascript",
+  ts:"text/typescript", typescript:"text/typescript", tsx:"text/typescript-jsx", json:"application/json", jsonc:"application/json", html:"htmlmixed", htm:"htmlmixed", vue:"htmlmixed",
   xml:"application/xml", svg:"application/xml", xaml:"application/xml", css:"text/css", scss:"text/x-scss", sql:"text/x-sql", tsql:"text/x-mssql", mssql:"text/x-mssql", "t-sql":"text/x-mssql",
   mysql:"text/x-mysql", pgsql:"text/x-pgsql", postgres:"text/x-pgsql", postgresql:"text/x-pgsql", py:"text/x-python", python:"text/x-python", go:"text/x-go", golang:"text/x-go",
   sh:"text/x-sh", bash:"text/x-sh", shell:"text/x-sh", zsh:"text/x-sh", console:"text/x-sh", yaml:"text/x-yaml", yml:"text/x-yaml",
