@@ -66,14 +66,15 @@ const MENUS = [
     ...tabs.map((t, i) => ({ label: t.name + (isDirty(t) ? " •" : ""), checked: i === active, radio:true, key: i < 8 ? "Alt-" + (i + 1) : null, fn: () => activateTab(i) })),
     "-", it("說明", "help") ] }
 ];
-let openMenuIdx = -1;
+let openMenuIdx = -1, hoverOpenedAt = 0;
 function buildMenubar(){
   const bar = $("#menubar"); bar.replaceChildren();
   MENUS.forEach((m, i) => {
     const b = el("button", { class:"menu-btn", type:"button", text:m.label, "aria-haspopup":"menu", "aria-expanded":"false", id:"menuBtn" + i });
     b.addEventListener("mousedown", e => e.preventDefault());
-    b.addEventListener("click", e => { e.stopPropagation(); openMenuIdx === i ? closeMenu() : openMenu(i); });
-    b.addEventListener("mouseenter", () => { if (openMenuIdx >= 0 && openMenuIdx !== i) openMenu(i); });
+    // Moving onto another menu while one is open switches to it; the click that follows must not close it again.
+    b.addEventListener("click", e => { e.stopPropagation(); if (openMenuIdx === i && performance.now() - hoverOpenedAt > 500) closeMenu(); else openMenu(i); });
+    b.addEventListener("mouseenter", () => { if (openMenuIdx >= 0 && openMenuIdx !== i){ openMenu(i); hoverOpenedAt = performance.now(); } });
     b.addEventListener("keydown", e => { if (e.key === "ArrowDown"){ e.preventDefault(); openMenu(i); } });
     bar.appendChild(b);
   });
