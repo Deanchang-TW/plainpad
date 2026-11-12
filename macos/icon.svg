@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- The brand mark from src/markup.html at app-icon size: macOS icons leave about 10% of the canvas empty around the shape. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34b57d"/><stop offset="1" stop-color="#0f8a5f"/></linearGradient>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="url(#g)"/>
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="url(#s)"/>
+  <g stroke="#fff" stroke-linecap="round" fill="none">
+    <path d="M304 346h416M304 512h282M304 678h150" stroke-width="72"/>
+    <path d="M570 612v152" stroke-width="58" opacity=".85"/>
+  </g>
+</svg>

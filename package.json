@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "build:mac": "node build-mac.mjs",
     "test": "node build.mjs && node tests/run.mjs"
   },
   "devDependencies": {

@@ -23,6 +23,23 @@ python3 -m http.server 8000 --directory dist/artifact   # 開 http://localhost:8
 
 改了 `src/` 之後重新執行 `node build.mjs`，再重新整理頁面。`dist/` 是建置產物，不要手改。
 
+## macOS 應用程式
+
+```sh
+npm run build:mac                  # 產生 dist/mac/Plainpad.app（需要 Xcode 或 Command Line Tools）
+open dist/mac/Plainpad.app
+```
+
+同一份網頁包在原生外殼裡（`macos/`，Swift + WKWebView，沒有其他相依套件）。和網頁版不同的地方：
+
+- 儲存走 macOS 的存檔面板，從磁碟開啟的檔案會直接寫回原路徑，沒有副檔名限制。
+- 可以從 Finder 的「打開檔案的應用程式」、拖到 Dock 圖示或 `open -a Plainpad 檔案` 開啟檔案；在 App 裡的「開啟」是 NSOpenPanel。
+- 有原生選單列（檔案、編輯、顯示方式、視窗），選單項目會呼叫頁面裡同一個 `run()`。
+- 工作階段一樣保存在頁面的 localStorage / IndexedDB，關閉視窗等於結束 App，結束前會先寫入。
+
+`node build-mac.mjs --universal` 會同時編譯 arm64 與 x86_64。App 只有 ad-hoc 簽章，自己的電腦可以直接執行；要給別人用需要 Developer ID 簽章與公證。
+`PLAINPAD_DEBUG=1 dist/mac/Plainpad.app/Contents/MacOS/Plainpad` 會把頁面的請求和橋接訊息印到終端機，頁面也可以用右鍵「檢閱元件」打開 Web Inspector。
+
 ## 建置與測試
 
 ```sh
@@ -42,6 +59,7 @@ PP_PLATFORM=mac node tests/run.mjs   # 模擬 Mac 鍵盤（⌘）；在 Mac 上�
 |---|---|
 | `dist/artifact/plainpad.html` + `dist/artifact/vendor/*` | 發佈到 Claude 的頁面，函式庫跟頁面一起發佈，不經過第三方 CDN |
 | `dist/plainpad-standalone.html` | 單一檔案（約 6 MB），在本機瀏覽器直接開啟，完全離線可用，存檔沒有副檔名限制 |
+| `dist/mac/Plainpad.app` | macOS 應用程式（`npm run build:mac`），頁面放在 `Contents/Resources/web/`，由 `plainpad://app/` 自訂協定提供 |
 | `dist/test/index.html`、`dist/test/prod.html` | 測試用：前者開啟測試介面，後者是正式頁面（用來確認沒有暴露測試介面） |
 
 `node build.mjs --compare <file>` 會逐位元組比對建置結果與指定檔案。
@@ -54,6 +72,7 @@ src/markup.html      版面 HTML
 src/styles/*.css     依區塊分檔，按檔名順序串接
 src/js/*.js          依功能分檔，按檔名順序串接，包在同一個函式裡執行
 build.mjs            組合頁面、打包 CodeMirror、複製其他函式庫
+build-mac.mjs        把頁面包成 macOS App；macos/ 是 Swift 原始碼、Info.plist 和圖示
 tests/*.test.mjs     瀏覽器測試；tests/fixtures 是樣本檔與預期輸出
 ```
 
@@ -72,6 +91,7 @@ tests/*.test.mjs     瀏覽器測試；tests/fixtures 是樣本檔與預期輸�
 | `19-markdown-preview.js` | Markdown 預覽、Mermaid、KaTeX，以及延遲載入函式庫 |
 | `20-hex-editor.js` | Hex 編輯器：以 piece table 管理修改，原檔按 64 KB 區塊延遲讀取 |
 | `23-actions.js`、`24-menus.js`、`25-keyboard.js` | 所有指令的入口 `run()`、選單定義、快速鍵 |
+| `11-native-shell.js` | macOS App 的橋接：偵測 WKWebView 的訊息處理器，存檔與開檔改走原生面板 |
 
 ## 發佈
 

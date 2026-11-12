@@ -10,6 +10,7 @@ npm install                      # 版本固定在 package-lock.json
 npm test                         # 建置 + 全部瀏覽器測試（約 1 分鐘），每次修改後都要跑
 node tests/run.mjs <關鍵字>      # 只跑名稱含關鍵字的測試，例如 hex、encoding › detects
 node build.mjs --compare <檔案>  # 逐位元組比對建置結果，用來證明重構沒有改變輸出
+npm run build:mac                # 產生 dist/mac/Plainpad.app（Swift + WKWebView 外殼，需要 swiftc）
 ```
 
 本機第一次跑測試前要先執行 `npx playwright install chromium`。也可以用 `CHROMIUM_PATH` 指定瀏覽器。
@@ -36,6 +37,13 @@ node build.mjs --compare <檔案>  # 逐位元組比對建置結果，用來證�
 - **保存**（`08-persistence.js`）：
   - 中繼資料存在 localStorage 的 `plainpad.session.v2`，分頁內容存在 IndexedDB 的 `docs` 和 `hex` 兩個 store。
   - 改變儲存格式時，要提高版本號、寫轉移程式，並加上轉移測試（參考 `storage.test.mjs` 的第一項）。
+
+- **macOS App**（`macos/`、`build-mac.mjs`）：同一份頁面裝在 WKWebView 裡，由 `plainpad://app/` 自訂協定提供。
+  - 頁面用 `NATIVE`（`00-config.js`）判斷自己在 App 裡；此時 `LOCAL` 也為 true。
+  - 頁面和 App 之間的訊息格式寫在 `macos/Sources/WebShell.swift` 開頭的註解，`11-native-shell.js` 是頁面這一側。
+    改動其中一邊時兩邊都要改，並更新 `tests/native.test.mjs`（它用假的訊息處理器模擬 App）。
+  - 頁面只在 `NATIVE` 時才把 `window.__ppNative` 放到 window 上，正式頁面仍然不能暴露任何東西。
+  - Swift 端無法用 Playwright 測，改動後要實際 `npm run build:mac` 跑一次；`PLAINPAD_DEBUG=1` 會印出請求與訊息。
 
 ## 頁面執行環境的限制
 
