@@ -31,7 +31,7 @@ function fakeDownloads(){
 }
 
 const ctxHelpers = {
-  base, fixtures: join(root, "tests/fixtures"),
+  base, browser, dist, fixtures: join(root, "tests/fixtures"),
   /* A fresh browser profile (empty storage) with fonts blocked; returns a page with Plainpad loaded. */
   async open({ path = "/test/index.html", init, downloads = true, clipboard = false, viewport = { width:1360, height:860 }, context } = {}){
     const ctx = context || await browser.newContext({ viewport, permissions: clipboard ? ["clipboard-read", "clipboard-write"] : [] });

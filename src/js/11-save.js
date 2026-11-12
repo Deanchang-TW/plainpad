@@ -23,7 +23,7 @@ async function saveTab(t = curT(), asNew = false){
   }
   if (!out.bytes.length){ toast("空白檔案無法下載，至少要有一個字元"); return false; }
   let fname = name;
-  if (!DL_EXT.has(extOf(name))){
+  if (!LOCAL && !DL_EXT.has(extOf(name))){
     const r = await ask({ title:"這個副檔名無法直接下載", text:`網頁沙盒只允許 txt、md、json、html、csv、svg 等格式。可以先存成「${name}.txt」，下載後把結尾的 .txt 刪掉；或複製全文貼到其他編輯器。`, actions:[
       { id:"cancel", label:"取消" }, { id:"copy", label:"複製全文" }, { id:"txt", label:"存成 .txt", primary:true } ]});
     if (r === "copy"){ (await copyText(text)) ? toast("已複製全文") : toast("瀏覽器拒絕複製，請改用 ⌘A ⌘C"); return false; }

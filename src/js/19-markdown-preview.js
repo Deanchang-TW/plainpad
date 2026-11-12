@@ -23,7 +23,9 @@ const libLoads = {};
 function loadLib(name, globalName){
   if (window[globalName]) return Promise.resolve(window[globalName]);
   if (!libLoads[name]) libLoads[name] = new Promise((res, rej) => {
-    const sc = document.createElement("script"); sc.src = LIB[name]; sc.async = true;
+    const sc = document.createElement("script"), inline = document.getElementById("pp-lib-" + name);
+    if (inline){ sc.textContent = inline.textContent; document.head.appendChild(sc); window[globalName] ? res(window[globalName]) : rej(new Error("內嵌的 " + name + " 無法執行")); return; }
+    sc.src = LIB[name]; sc.async = true;
     sc.onload = () => window[globalName] ? res(window[globalName]) : rej(new Error("載入後找不到 " + globalName));
     sc.onerror = () => { delete libLoads[name]; rej(new Error("無法下載 " + name + "，請確認網路連線")); };
     document.head.appendChild(sc);

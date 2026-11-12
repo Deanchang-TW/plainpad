@@ -6,6 +6,7 @@ const EOLS = { LF: "\n", CRLF: "\r\n", CR: "\r" };
 const EOL_LABEL = { LF: "Unix (LF)", CRLF: "Windows (CR LF)", CR: "Mac 舊式 (CR)" };
 const DL_EXT = new Set("txt json md csv html svg gif png jpg jpeg webp pdf zip docx pptx xlsx epub ttf mp4 webm".split(" "));
 const BM = "pp-bookmarks";
+const LOCAL = !!window.__ppLocal;   // standalone file opened from disk: ordinary browser downloads, no extension restrictions
 const HELP_NAME = "Plainpad 說明.md";
 
 const LANGS = [

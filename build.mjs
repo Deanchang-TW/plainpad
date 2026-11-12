@@ -1,5 +1,6 @@
 // Builds Plainpad from src/ into dist/.
 //   dist/artifact/plainpad.html + dist/artifact/vendor/*   the page published to Claude (libraries are published next to it)
+//   dist/plainpad-standalone.html                          one self-contained file that runs from disk, offline
 //   dist/test/index.html                                   the artifact page inside a document shell, with the test hook on
 // Usage: node build.mjs [--compare path/to/published.html]
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, copyFileSync } from "node:fs";
@@ -55,6 +56,25 @@ function shell(body, headExtra = ""){
   return `<!doctype html>\n<html lang="zh-Hant">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>\n${headExtra}</head>\n<body>\n${body}</body>\n</html>\n`;
 }
 
+/* Inline <script> content must not contain "</script", "<script" or "<!--". Writing "<" as the JS escape \x3C keeps the
+   meaning inside strings, regular expressions and template literals, which is where these sequences occur in the libraries. */
+const inlineSafe = code => code.replace(/<(\/?script|!--)/gi, "\\x3C$1");
+
+export function standalonePage(files){
+  const shim = `<script>
+/* Standalone build: there is no Claude download capability here, so saving uses an ordinary browser download. */
+window.__ppLocal = true;
+if (!window.claude) window.claude = { use: async name => name !== "downloads" ? null : { save: async ({ filename, data }) => {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data])); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); return { status: "saved" }; } } };
+</script>
+`;
+  const now = [VENDOR.codemirror, VENDOR.marked, VENDOR.purify].map(f => `<script>\n${inlineSafe(files[f])}\n</script>\n`).join("");
+  const lazy = [["katex", VENDOR.katex], ["mermaid", VENDOR.mermaid]].map(([n, f]) => `<script type="text/plain" id="pp-lib-${n}">\n${inlineSafe(files[f])}\n</script>\n`).join("");
+  const head = read("src/head.html").replace(/<meta name="claude:[^>]*>\n/, "") + "<style>\n" + styles() + "</style>\n";
+  return shell(read("src/markup.html") + shim + now + lazy + "<script>\n" + inlineSafe(appScript()) + "</script>\n", head);
+}
+
 function checkVendorRefs(html, files){
   for (const m of html.matchAll(/vendor\/([\w.-]+\.js)/g)) if (!files[m[1]]) throw new Error(`The page refers to vendor/${m[1]}, which this build does not produce. Update the source to ${Object.keys(files).join(", ")}.`);
 }
@@ -72,6 +92,8 @@ async function main(){
   }
   writeFileSync(new URL("dist/test/index.html", root), shell(page, "<script>window.__PP_TEST = true</script>\n"));
   writeFileSync(new URL("dist/test/prod.html", root), shell(page));
+  const standalone = standalonePage(files);
+  writeFileSync(new URL("dist/plainpad-standalone.html", root), standalone);
   const i = process.argv.indexOf("--compare");
   if (i > 0){
     const other = readFileSync(process.argv[i + 1], "utf8");
@@ -79,5 +101,6 @@ async function main(){
     console.log("Identical to", process.argv[i + 1]);
   }
   console.log("Built dist/artifact/plainpad.html", (page.length / 1024).toFixed(0) + " KB,", Object.keys(files).length, "vendor files");
+  console.log("Built dist/plainpad-standalone.html", (standalone.length / 1048576).toFixed(1) + " MB");
 }
 if (import.meta.url === `file://${process.argv[1]}`) await main();

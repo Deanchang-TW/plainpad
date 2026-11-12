@@ -438,7 +438,7 @@ async function hexSave(t, asNew){
   if (asNew){ const v = await promptText({ title:"另存新檔", text:"輸入檔名。", value:name, ok:"儲存" }); if (v == null || !v.trim()) return false; name = v.trim(); }
   const dl = await getDownloads(); if (!dl){ toast("這個檢視無法下載檔案"); return false; }
   const blob = s.buf.toBlob(); let fname = name, data = blob;
-  if (!DL_EXT.has(extOf(name))){
+  if (!LOCAL && !DL_EXT.has(extOf(name))){
     const tooBig = blob.size > 0xFFFF0000;
     const r = await ask({ title:`「${name}」無法用原本的副檔名下載`, text:`網頁沙盒只允許下載 png、pdf、zip、txt 等少數格式。可以包成「${name}.zip」，解壓縮後就是原檔（不壓縮、內容一個位元組都不變）；或存成「${name}.txt」，下載後把結尾的 .txt 刪掉。`,
       actions:[{ id:"cancel", label:"取消" }, { id:"txt", label:"存成 .txt", primary:tooBig }, ...(tooBig ? [] : [{ id:"zip", label:"包成 .zip", primary:true }])] });
