@@ -3,12 +3,32 @@
 在瀏覽器裡使用的 Notepad++ 風格編輯器：多分頁文字編輯、Hex 編輯器、Markdown 預覽（含 Mermaid 與數學公式）、
 分割檢視與比較、書籤、巨集、欄編輯器、規則運算式搜尋，以及保留原始編碼的存檔。
 
+## 本機啟動
+
+```sh
+npm install                        # 第一次才需要
+node build.mjs                     # 產生 dist/
+open dist/plainpad-standalone.html # macOS；其他系統用瀏覽器開啟這個檔案
+```
+
+單檔版本把所有函式庫包在裡面，用 `file://` 直接開就能用，存檔走瀏覽器一般下載。
+
+要用和線上版相同的形式（頁面加 `vendor/` 目錄），必須透過 HTTP 伺服器開啟，用 `file://` 會載不到函式庫：
+
+```sh
+npx serve dist/artifact            # 開 http://localhost:3000/plainpad.html
+# 或
+python3 -m http.server 8000 --directory dist/artifact   # 開 http://localhost:8000/plainpad.html
+```
+
+改了 `src/` 之後重新執行 `node build.mjs`，再重新整理頁面。`dist/` 是建置產物，不要手改。
+
 ## 建置與測試
 
 ```sh
 npm install          # 函式庫版本固定在 package.json / package-lock.json
 npm run build        # 產生 dist/
-npm test             # 建置後跑 32 項 Chromium 測試
+npm test             # 建置後跑全部 Chromium 測試（約 1 分鐘）
 node tests/run.mjs hex      # 只跑名稱含「hex」的測試
 PP_PLATFORM=mac node tests/run.mjs   # 模擬 Mac 鍵盤（⌘）；在 Mac 上預設就是這樣
 ```
