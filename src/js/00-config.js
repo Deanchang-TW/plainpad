@@ -5,7 +5,7 @@ const STORE_KEY = "plainpad.session.v2", OLD_STORE_KEY = "plainpad.session.v1";
 const EOLS = { LF: "\n", CRLF: "\r\n", CR: "\r" };
 const EOL_LABEL = { LF: "Unix (LF)", CRLF: "Windows (CR LF)", CR: "Mac 舊式 (CR)" };
 const DL_EXT = new Set("txt json md csv html svg gif png jpg jpeg webp pdf zip docx pptx xlsx epub ttf mp4 webm".split(" "));
-const BM = "pp-bookmarks";
+const BM = "pp-bookmarks", FG = "pp-folds";
 const LOCAL = !!window.__ppLocal;   // standalone file opened from disk: ordinary browser downloads, no extension restrictions
 const HELP_NAME = "Plainpad 說明.md";
 
@@ -43,7 +43,7 @@ const ENCODINGS = [
 ];
 
 const settings = { wrap:false, ws:false, lineNumbers:true, fontSize:14, theme:"system", useTabs:true, tabSize:4,
-  autoComplete:true, autoClose:false, smartHighlight:true, macros:[], lastMacro:null, filesFilter:"", skipDirs:true, mdPreview:false, mdSync:true, icons:"color", hexCols:16, hexEnc:"ascii", hexInsp:true, hexLE:true };
+  autoComplete:true, autoClose:false, smartHighlight:true, macros:[], lastMacro:null, filesFilter:"", skipDirs:true, mdPreview:false, mdSync:true, icons:"color", foldStyle:"guides", hexCols:16, hexEnc:"ascii", hexInsp:true, hexLE:true };
 let tabs = [], active = -1, seq = 1;
 let hitMarks = [];
 let quiet = 0;

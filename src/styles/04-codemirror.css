@@ -41,11 +41,25 @@ span.CodeMirror-selectedtext{background:none}
 .CodeMirror-activeline-gutter .CodeMirror-linenumber{color:var(--fg)}
 .CodeMirror-matchingbracket{outline:1px solid var(--accent);color:inherit!important;border-radius:2px}
 .CodeMirror-nonmatchingbracket{color:var(--danger)!important;text-decoration:underline wavy}
-.CodeMirror-foldgutter{width:14px}
-.CodeMirror-foldgutter-open,.CodeMirror-foldgutter-folded{cursor:pointer;color:var(--muted);text-align:center;font-size:.8em}
-.CodeMirror-foldgutter-open:after{content:"\25BE"}
-.CodeMirror-foldgutter-folded:after{content:"\25B8"}
-.CodeMirror-foldmarker{color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:4px;padding:0 4px;margin:0 2px;cursor:pointer;font-size:.85em}
+/* fold gutter: guides (Notepad++ style) or chevrons (VS Code style), see 03-fold-guides.js */
+.pp-folds{width:13px;cursor:pointer}
+.CodeMirror-gutter-wrapper{top:0;bottom:0}
+.CodeMirror-gutter-elt:has(> .fg){top:0;bottom:0}
+.fg{position:relative;width:13px;height:100%;--fold:color-mix(in srgb,var(--muted) 55%,transparent)}
+.fg::before{content:"";position:absolute;left:6px;width:1px;top:50%;bottom:50%;background:var(--fold)}
+.fg.fg-a::before{top:0}
+.fg.fg-b::before{bottom:0}
+.fg.fg-e::after{content:"";position:absolute;left:6px;right:2px;top:50%;height:1px;background:var(--fold)}
+.fg i{position:absolute;left:2px;top:50%;width:9px;height:9px;margin-top:-4.5px;box-sizing:border-box;border:1px solid var(--fold);border-radius:2px;background:linear-gradient(var(--fg-2),var(--fg-2)) center/5px 1px no-repeat,var(--gutter)}
+.fg.fg-f i{border-color:var(--accent);background:linear-gradient(var(--accent),var(--accent)) center/5px 1px no-repeat,linear-gradient(var(--accent),var(--accent)) center/1px 5px no-repeat,var(--gutter)}
+.CodeMirror.gutter-hover .fg i{border-color:var(--fg-2)}
+.fg:hover i{border-color:var(--accent)}
+:root[data-fold="chevrons"] .fg::before,:root[data-fold="chevrons"] .fg::after{display:none}
+:root[data-fold="chevrons"] .fg i{left:3px;width:6px;height:6px;margin-top:-4.5px;border:0;border-right:1.5px solid var(--fg-2);border-bottom:1.5px solid var(--fg-2);border-radius:0;background:none;transform:rotate(45deg);opacity:0;transition:opacity var(--ease)}
+:root[data-fold="chevrons"] .CodeMirror.gutter-hover .fg i{opacity:1}
+:root[data-fold="chevrons"] .fg.fg-f i{opacity:1;border-color:var(--accent);transform:translateX(-1.5px) rotate(-45deg)}
+.CodeMirror-foldmarker{display:inline-block;color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:999px;padding:0 7px;margin:0 3px;cursor:pointer;font:700 .8em/1.4 var(--mono);letter-spacing:.1em;vertical-align:middle;transition:background-color var(--ease)}
+.CodeMirror-foldmarker:hover{background:var(--accent-soft-2)}
 .cm-matchhighlight{background:var(--smart);border-radius:2px}
 .cm-hit{background:var(--hit);border-radius:2px}
 .cm-userMark{background:var(--mark);border-radius:2px}

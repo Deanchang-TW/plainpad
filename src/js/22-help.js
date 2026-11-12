@@ -112,7 +112,7 @@ GROUP BY c.CustomerId,
          DATEFROMPARTS(YEAR(o.OrderDate), MONTH(o.OrderDate), 1)
 ORDER BY Revenue DESC;
 
-/* 區塊註解也能摺疊：點左側的 ▾ */
+/* 區塊註解也能摺疊：點行號右邊的 ⊟ 方塊（「設定 > 摺疊標記」可改成 VS Code 式箭頭） */
 CREATE INDEX IX_Orders_Customer_Date
     ON dbo.Orders (CustomerId, OrderDate)
     INCLUDE (TotalAmount, Status);

@@ -16,7 +16,7 @@ const CM_FILES = [
   "lib/codemirror",
   "mode/clike/clike", "mode/javascript/javascript", "mode/jsx/jsx", "mode/xml/xml", "mode/css/css", "mode/htmlmixed/htmlmixed", "mode/sql/sql",
   "mode/python/python", "mode/go/go", "mode/markdown/markdown", "mode/shell/shell", "mode/yaml/yaml", "mode/properties/properties",
-  "addon/fold/foldcode", "addon/fold/foldgutter", "addon/fold/brace-fold", "addon/fold/xml-fold", "addon/fold/indent-fold", "addon/fold/comment-fold",
+  "addon/fold/foldcode", "addon/fold/brace-fold", "addon/fold/xml-fold", "addon/fold/indent-fold", "addon/fold/comment-fold", "addon/fold/markdown-fold",
   "addon/edit/matchbrackets", "addon/edit/closebrackets", "addon/selection/active-line", "addon/search/match-highlighter",
   "addon/comment/comment", "addon/hint/show-hint", "addon/hint/anyword-hint", "addon/runmode/runmode"
 ];

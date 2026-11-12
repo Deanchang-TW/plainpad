@@ -5,7 +5,7 @@ const wsOverlay = { name:"ws", token(stream){
 
 function makeEditor(host){
   const ed = CodeMirror(host, {
-    value:"", lineNumbers:true, gutters:[BM, "CodeMirror-linenumbers", "CodeMirror-foldgutter"], foldGutter:true,
+    value:"", lineNumbers:true, gutters:[BM, "CodeMirror-linenumbers", FG],
     foldOptions:{ widget:"⋯" }, styleActiveLine:{ nonEmpty:false }, matchBrackets:true,
     highlightSelectionMatches:{ minChars:2, wordsOnly:true, delay:80 },
     tabSize:4, indentUnit:4, indentWithTabs:true, smartIndent:false, electricChars:false,

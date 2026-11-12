@@ -13,6 +13,7 @@ function applySettings(){
   document.documentElement.style.setProperty("--editor-size", settings.fontSize + "px");
   if (settings.theme === "system") delete document.documentElement.dataset.padTheme; else document.documentElement.dataset.padTheme = settings.theme;
   document.documentElement.dataset.icons = settings.icons === "mono" ? "mono" : "color";
+  document.documentElement.dataset.fold = settings.foldStyle === "chevrons" ? "chevrons" : "guides";
   $("#tWrap").setAttribute("aria-pressed", String(settings.wrap));
   $("#tWs").setAttribute("aria-pressed", String(settings.ws));
   cmMain.refresh(); if (!$("#pane2").hidden) cm2.refresh();
@@ -23,4 +24,5 @@ function applySettings(){
 function setSetting(k, v){ settings[k] = v; applySettings(); persistSoon(); }
 const THEME_LABEL = { system:"跟隨系統", light:"淺色", dark:"深色" };
 const ICON_LABEL = { color:"彩色", mono:"單色" };
+const FOLD_LABEL = { guides:"指引線（Notepad++ 樣式）", chevrons:"箭頭（VS Code 樣式）" };
 

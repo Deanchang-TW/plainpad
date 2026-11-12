@@ -33,6 +33,20 @@ export default [
     assert.equal(await p.evaluate(() => [...document.querySelectorAll("#stLang option")].find(o => o.value === "tsx").textContent), "TypeScript (TSX)");
   }},
 
+  { name: "fold guides mark block start, body and end, and a click folds the block", async fn({ open }){
+    const p = await open();
+    await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("function a(){\n  if (x){\n    y();\n  }\n  z();\n}\nlast();"); A.cmMain.setOption("mode", "text/javascript"); }));
+    await p.waitForFunction(() => document.querySelectorAll(".CodeMirror-gutter-elt .fg").length >= 6);
+    const cls = await p.evaluate(() => { const out = []; document.querySelectorAll(".CodeMirror-code > div").forEach(d => { const m = d.querySelector(".fg"); out.push(m ? m.className.replace(/^fg /, "") : ""); }); return out; });
+    assert.deepEqual(cls.slice(0, 7), ["fg-s fg-b", "fg-s fg-a fg-b", "fg-m fg-a fg-b", "fg-e fg-a fg-b", "fg-m fg-a fg-b", "fg-e fg-a", ""], "outer block: start, body, end; inner block nested with the outer line continuing");
+    await p.click(".CodeMirror-code > div:nth-child(2) .fg i");
+    assert.equal(await p.evaluate(P(A => A.cmMain.findMarks({ line:1, ch:0 }, { line:2, ch:0 }).filter(m => m.__isFold).length)), 1, "clicking the box folds the inner block");
+    await p.waitForFunction(() => document.querySelector(".CodeMirror-code > div:nth-child(2) .fg.fg-f"));
+    assert.ok(await p.evaluate(() => !!document.querySelector(".CodeMirror-foldmarker")), "the folded line shows the placeholder");
+    await p.click(".menu-btn:has-text(\"設定\")"); await p.click(".menu-pop .menu-item:has-text(\"VS Code\")");
+    assert.equal(await p.evaluate(() => document.documentElement.dataset.fold), "chevrons");
+  }},
+
   { name: "macro records typing and cursor keys, then runs to end of file", async fn({ open }){
     const p = await open();
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("alpha\nbeta\ngamma"); A.cmMain.setCursor(0, 0); A.cmMain.focus(); }));
