@@ -10,7 +10,11 @@ import WebKit
 ///   { type: "openPanel" }                                 show NSOpenPanel
 ///   { type: "save", filename, path, data (base64) }       write the file; reply { status, path, filename }
 ///   { type: "title", name, path, dirty }                  the active tab changed; shown in the window title bar
-/// The app calls back into the page through `window.__ppNative.run(name)`, `.open(items)` and `.flush()`.
+///   { type: "watch", files: [{ path, mtime }] }           the files the tabs came from, with the modification time the
+///                                                         page last saw (null: unknown, take the file's current one)
+/// The app calls back into the page through `window.__ppNative.run(name)`, `.open(items)`, `.changed(items)` and
+/// `.flush()`. open and changed items carry { token, name, path, mtime }; a changed item for a file that is gone is
+/// { path, deleted: true }. Modification times are milliseconds since 1970, and save replies carry the new one too.
 final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHandler, WKNavigationDelegate, WKUIDelegate {
     static let scheme = "plainpad"
     static let origin = "plainpad://app/"
@@ -24,6 +28,10 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
     private var servedFiles: [String: URL] = [:]
     private var stoppedTasks = Set<ObjectIdentifier>()
     private var lastDirectory: URL?
+    /// path → modification time the page knows about (-1: the file was missing). Checked every two seconds and whenever
+    /// the app becomes active; a difference is reported to the page once.
+    private var watched: [String: Double] = [:]
+    private var watchTimer: Timer?
 
     override init() {
         webRoot = Bundle.main.resourceURL!.appendingPathComponent("web", isDirectory: true)
@@ -38,6 +46,10 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
         webView.allowsMagnification = false
         webView.setValue(false, forKey: "drawsBackground")
         if #available(macOS 13.3, *) { webView.isInspectable = true }
+        NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.checkFiles()
+        }
+        watchTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in self?.checkFiles() }
     }
 
     func load() {
@@ -56,11 +68,13 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
     func open(_ urls: [URL]) {
         guard !urls.isEmpty else { return }
         guard ready else { pendingOpen += urls; return }
-        var items: [[String: String]] = []
+        var items: [[String: Any]] = []
         for url in urls {
             let token = UUID().uuidString
             servedFiles[token] = url
-            items.append(["token": token, "name": url.lastPathComponent, "path": url.path])
+            let mtime = Self.modificationTime(url.path) ?? -1
+            watched[url.path] = mtime
+            items.append(["token": token, "name": url.lastPathComponent, "path": url.path, "mtime": mtime])
         }
         lastDirectory = urls.last?.deletingLastPathComponent()
         let json = String(data: try! JSONSerialization.data(withJSONObject: items), encoding: .utf8)!
@@ -102,6 +116,15 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
             }
         case "save":
             save(body, replyHandler)
+        case "watch":
+            replyHandler(nil, nil)
+            var next: [String: Double] = [:]
+            for file in (body["files"] as? [[String: Any]]) ?? [] {
+                guard let path = file["path"] as? String, !path.isEmpty else { continue }
+                next[path] = (file["mtime"] as? Double) ?? watched[path] ?? Self.modificationTime(path) ?? -1
+            }
+            watched = next
+            checkFiles()
         default:
             replyHandler(nil, "unknown message \(type)")
         }
@@ -140,10 +163,39 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
     private func write(_ data: Data, to url: URL) throws {
         try data.write(to: url, options: .atomic)
         lastDirectory = url.deletingLastPathComponent()
+        watched[url.path] = Self.modificationTime(url.path) ?? -1   // our own write is not an outside change
     }
 
-    private func saved(_ url: URL) -> [String: String] {
-        ["status": "saved", "path": url.path, "filename": url.lastPathComponent]
+    private func saved(_ url: URL) -> [String: Any] {
+        ["status": "saved", "path": url.path, "filename": url.lastPathComponent, "mtime": watched[url.path] ?? -1]
+    }
+
+    // MARK: files changed outside Plainpad
+
+    static func modificationTime(_ path: String) -> Double? {
+        guard let date = (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date else { return nil }
+        return (date.timeIntervalSince1970 * 1000).rounded()
+    }
+
+    private func checkFiles() {
+        guard ready, !watched.isEmpty else { return }
+        var changes: [[String: Any]] = []
+        for (path, known) in watched {
+            let now = Self.modificationTime(path) ?? -1
+            if now == known { continue }
+            watched[path] = now
+            if now < 0 {
+                changes.append(["path": path, "deleted": true])
+            } else {
+                let token = UUID().uuidString
+                servedFiles[token] = URL(fileURLWithPath: path)
+                changes.append(["path": path, "token": token, "name": (path as NSString).lastPathComponent, "mtime": now])
+            }
+        }
+        guard !changes.isEmpty, let json = try? JSONSerialization.data(withJSONObject: changes),
+              let text = String(data: json, encoding: .utf8) else { return }
+        log("changed on disk:", changes.map { $0["path"] as? String ?? "" }.joined(separator: ", "))
+        webView.evaluateJavaScript("window.__ppNative.changed(\(text))") { _, _ in }
     }
 
     // MARK: plainpad:// scheme

@@ -40,6 +40,7 @@ async function saveTab(t = curT(), asNew = false){
   try {
     const r = await dl.save({ filename: fname, data: out.bytes, path: asNew || t.untitled ? null : t.path });
     if (r && r.path){ t.path = r.path; name = fname = r.filename; }
+    if (r && r.mtime != null) t.mtime = r.mtime;
     const renamed = name !== t.name; t.name = name; t.untitled = false;
     if (renamed){ const l = langForName(name); if (l !== "text") setLang(t, l); }
     t.cleanGen = t.doc.changeGeneration(true); t.forceDirty = false;

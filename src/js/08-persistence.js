@@ -10,8 +10,8 @@ function persistableHex(t){ return t.hex.loading || t.hex.buf.blob.size <= HEX_P
 function sessionMeta(){
   const keep = tabs.filter(t => !isHex(t) || persistableHex(t));
   return { v:2, seq, active: Math.max(0, keep.indexOf(cur())), settings, tabs: keep.map(t => isHex(t)
-    ? { kind:"hex", id:t.id, name:t.name, path:t.path, dirty:isDirty(t), cur:t.hex.cur }
-    : { id:t.id, name:t.name, path:t.path, lang:t.langId, eol:t.eol, bom:t.bom, enc:t.encoding, untitled:t.untitled, dirty:isDirty(t), cur:t.doc.getCursor(), bm: bmLines(t) }) };
+    ? { kind:"hex", id:t.id, name:t.name, path:t.path, mtime:t.mtime, dirty:isDirty(t), cur:t.hex.cur }
+    : { id:t.id, name:t.name, path:t.path, mtime:t.mtime, lang:t.langId, eol:t.eol, bom:t.bom, enc:t.encoding, untitled:t.untitled, dirty:isDirty(t), cur:t.doc.getCursor(), bm: bmLines(t) }) };
 }
 function docsPersist(){
   const changed = tabs.filter(t => !isHex(t) && t.savedGen !== t.doc.changeGeneration());
@@ -48,11 +48,12 @@ async function restore(){
   }
   const lost = [];
   s.tabs.forEach(o => {
-    if (o.kind === "hex"){ if (o.id) tabs.push(hexRestoreTab(o)); return; }
+    if (o.kind === "hex"){ if (o.id){ const h = hexRestoreTab(o); h.mtime = o.mtime; tabs.push(h); } return; }
     let text = legacy ? o.text : texts.get(o.id);
     if (text == null){ if (o.untitled && !o.dirty) text = ""; else { lost.push(o.name); return; } }
     const t = makeTab({ id: legacy ? null : o.id, name:o.name, path:o.path || null, text, lang: storedLang(o), eol: EOLS[o.eol] ? o.eol : "LF", bom:!!o.bom, encoding:o.enc || "UTF-8", untitled:!!o.untitled, dirty:!!o.dirty, bm:o.bm });
     if (o.cur) t.doc.setCursor(o.cur);
+    t.mtime = o.mtime;   // modification time of the file on disk when last opened or saved (macOS app only)
     if (!legacy) t.savedGen = t.doc.changeGeneration();
     tabs.push(t);
   });

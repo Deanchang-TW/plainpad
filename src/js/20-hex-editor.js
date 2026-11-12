@@ -444,7 +444,7 @@ async function hexSave(t, asNew){
       actions:[{ id:"cancel", label:"取消" }, { id:"txt", label:"存成 .txt", primary:tooBig }, ...(tooBig ? [] : [{ id:"zip", label:"包成 .zip", primary:true }])] });
     if (r === "zip"){ data = await makeZip(name, blob); fname = name + ".zip"; } else if (r === "txt") fname = name + ".txt"; else return false;
   }
-  try { const r = await dl.save({ filename:fname, data, path: asNew ? null : t.path }); if (r && r.path){ t.path = r.path; name = fname = r.filename; } }
+  try { const r = await dl.save({ filename:fname, data, path: asNew ? null : t.path }); if (r && r.path){ t.path = r.path; name = fname = r.filename; } if (r && r.mtime != null) t.mtime = r.mtime; }
   catch(e){ const code = e && e.code; toast(code === "declined" ? "已取消儲存" : code === "rate_limited" ? "已有一個儲存對話框開著，請先處理" : "無法儲存：" + ((e && e.message) || code || "未知錯誤")); return false; }
   s.buf = new HexBuf(blob); s.clean = s.buf.pieces; s.undo = []; s.redo = []; s.version++; s.lastEdit = null; t.name = name;
   renderTabs(); if (hx.tab === t){ hx.sig = ""; hexRefresh(); } persistSoon(); toast("已儲存 " + fname); return true;
