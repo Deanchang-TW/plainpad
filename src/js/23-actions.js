@@ -36,7 +36,7 @@ const A = {
   jsonMin: () => applyText(s => JSON.stringify(JSON.parse(s)), "JSON 壓縮", "json"),
   b64e: () => applyText(b64enc, "Base64 編碼"), b64d: () => applyText(b64dec, "Base64 解碼"),
   urle: () => applyText(encodeURIComponent, "URL 編碼"), urld: () => applyText(s => decodeURIComponent(s.replace(/\+/g, " ")), "URL 解碼"),
-  hashes, wordCount, foldAll: () => cm.execCommand("foldAll"), unfoldAll: () => cm.execCommand("unfoldAll"),
+  hashes, wordCount, foldAll: () => foldAllBlocks(cm), unfoldAll: () => cm.execCommand("unfoldAll"),
   bmToggle, bmNext: () => bmJump(1), bmPrev: () => bmJump(-1), bmClear, bmInverse, bmCopy: () => bmCopy(false), bmCut: () => bmCopy(true), bmDelete: () => bmDelete(), bmKeepOnly,
   macroRec, macroPlay: () => playMacro(null), macroMulti, macroSave,
   help: openHelp, mdPreview: () => toggleMd(),

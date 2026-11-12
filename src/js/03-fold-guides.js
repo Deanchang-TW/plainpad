@@ -18,6 +18,10 @@ function fgRange(cm, line){
   if (!r){ const m = /\S/.exec(cm.getLine(line)); if (m) r = auto(cm, Pos(line, m.index + 1)); }
   return r && r.to.line > r.from.line ? r : null;
 }
+/* 檢視 › 全部摺疊. CodeMirror's own foldAll asks each line at column 0 only, which misses JSX tags; this one uses fgRange. */
+function foldAllBlocks(cm){
+  cm.operation(() => { for (let l = cm.firstLine(), last = cm.lastLine(); l <= last; l++){ const r = fgRange(cm, l); if (r) cm.foldCode(Pos(l, 0), { rangeFinder: () => r }, "fold"); } });
+}
 function fgMarker(cls){ const d = document.createElement("div"); d.className = cls; if (/fg-[sf]/.test(cls)) d.appendChild(document.createElement("i")); return d; }
 function fgUpdate(cm){
   const st = cm.state.ppFolds; if (st) st.timer = 0;

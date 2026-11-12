@@ -47,6 +47,14 @@ export default [
     assert.equal(await p.evaluate(() => document.documentElement.dataset.fold), "chevrons");
   }},
 
+  { name: "fold all folds JSX tags as well as braces", async fn({ open }){
+    const p = await open();
+    const r = await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("const a = () => {\n  return (\n    <div>\n      <p>\n        x\n      </p>\n    </div>\n  );\n};"); A.cmMain.setOption("mode", "text/typescript-jsx");
+      A.run("foldAll"); const folds = A.cmMain.getAllMarks().filter(m => m.__isFold).map(m => m.find().from.line).sort(); A.run("unfoldAll"); return { folds, left: A.cmMain.getAllMarks().filter(m => m.__isFold).length }; }));
+    assert.deepEqual(r.folds, [0, 2, 3], "the arrow function body, the <div> and the <p> are folded");
+    assert.equal(r.left, 0, "unfold all clears them again");
+  }},
+
   { name: "macro records typing and cursor keys, then runs to end of file", async fn({ open }){
     const p = await open();
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("alpha\nbeta\ngamma"); A.cmMain.setCursor(0, 0); A.cmMain.focus(); }));
