@@ -1,0 +1,183 @@
+<div class="app" id="app">
+  <header class="head">
+    <div class="head-top">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">¶</span><span class="brand-name">Plainpad</span></div>
+      <nav class="menubar" id="menubar" aria-label="主選單"></nav>
+    </div>
+    <div class="tools" role="toolbar" aria-label="工具列">
+      <button class="tool" data-act="newTab" title="新增分頁" aria-label="新增分頁"><svg viewBox="0 0 16 16"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3 M8 7.5v4 M6 9.5h4"/></svg></button>
+      <button class="tool" data-act="openFile" title="開啟檔案" aria-label="開啟檔案"><svg viewBox="0 0 16 16"><path d="M1.5 12.5v-9h4l1.5 1.5h5v2 M1.5 12.5l2-5.5h11l-2 5.5z"/></svg></button>
+      <button class="tool" data-act="save" title="儲存" aria-label="儲存"><svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11z M5 2.5v3h5v-3 M5 13.5v-4h6v4"/></svg></button>
+      <button class="tool" data-act="saveAll" title="全部儲存" aria-label="全部儲存"><svg viewBox="0 0 16 16"><path d="M4.5 4.5h7l2 2v7h-9z M6.5 4.5v2.5h4V4.5 M2.5 11.5v-9h8"/></svg></button>
+      <button class="tool" data-act="closeActive" title="關閉分頁" aria-label="關閉分頁"><svg viewBox="0 0 16 16"><path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3 M6.3 7.8l3.4 3.4 M9.7 7.8l-3.4 3.4"/></svg></button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-act="undo" title="復原" aria-label="復原"><svg viewBox="0 0 16 16"><path d="M5 3.5 2 6.5l3 3 M2.5 6.5h7a3.5 3.5 0 0 1 0 7H7"/></svg></button>
+      <button class="tool" data-act="redo" title="重做" aria-label="重做"><svg viewBox="0 0 16 16"><path d="M11 3.5l3 3-3 3 M13.5 6.5h-7a3.5 3.5 0 0 0 0 7H9"/></svg></button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-act="find" title="尋找" aria-label="尋找"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 4 4"/></svg></button>
+      <button class="tool" data-act="replace" title="取代" aria-label="取代"><svg viewBox="0 0 16 16"><path d="M2 4.5h8 M7.5 2l2.5 2.5L7.5 7 M14 11.5H6 M8.5 9 6 11.5 8.5 14"/></svg></button>
+      <button class="tool" data-act="findInFiles" title="在檔案中尋找" aria-label="在檔案中尋找"><svg viewBox="0 0 16 16"><path d="M1.5 12.5v-9h4l1.5 1.5h6v2.5 M1.5 12.5h6"/><circle cx="11" cy="10.5" r="2.6"/><path d="m12.9 12.4 1.8 1.8"/></svg></button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-act="toggleWrap" id="tWrap" title="自動換行" aria-label="自動換行" aria-pressed="false"><svg viewBox="0 0 16 16"><path d="M2 3.5h12 M2 7.5h9.5a2 2 0 0 1 0 4H8 M9.5 9.5 7.5 11.5l2 2 M2 11.5h3"/></svg></button>
+      <button class="tool" data-act="toggleWs" id="tWs" title="顯示空白與行尾" aria-label="顯示空白與行尾" aria-pressed="false"><svg viewBox="0 0 16 16"><path d="M10 2.5v11 M12.5 2.5v11 M13.5 2.5H7.5a3 3 0 0 0 0 6H10"/></svg></button>
+      <button class="tool" data-act="zoomIn" title="放大" aria-label="放大"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 4 4 M5 7h4 M7 5v4"/></svg></button>
+      <button class="tool" data-act="zoomOut" title="縮小" aria-label="縮小"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 4 4 M5 7h4"/></svg></button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-act="bmToggle" title="切換書籤" aria-label="切換書籤"><svg viewBox="0 0 16 16"><path d="M4.5 2h7v12L8 11.3 4.5 14z"/></svg></button>
+      <button class="tool" data-act="macroRec" id="tRec" title="開始錄製巨集" aria-label="開始錄製巨集" aria-pressed="false"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.5" fill="currentColor"/></svg></button>
+      <button class="tool" data-act="macroPlay" title="播放巨集" aria-label="播放巨集"><svg viewBox="0 0 16 16"><path d="M5 3.5v9l7-4.5z"/></svg></button>
+      <button class="tool" data-act="macroMulti" title="執行巨集多次" aria-label="執行巨集多次"><svg viewBox="0 0 16 16"><path d="M2.5 4v8l5-4z M8.5 4v8l5-4z"/></svg></button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-act="toggleSplit" id="tSplit" title="分割檢視" aria-label="分割檢視" aria-pressed="false"><svg viewBox="0 0 16 16"><path d="M2 2.5h12v11H2z M8 2.5v11"/></svg></button>
+      <button class="tool" data-act="toggleSync" id="tSync" title="同步捲動" aria-label="同步捲動" aria-pressed="false"><svg viewBox="0 0 16 16"><path d="M5 2.5v11 M3 4.5l2-2 2 2 M3 11.5l2 2 2-2 M11 2.5v11 M9 4.5l2-2 2 2 M9 11.5l2 2 2-2"/></svg></button>
+      <button class="tool" data-act="compare" id="tCmp" title="比較兩個分頁" aria-label="比較兩個分頁" aria-pressed="false"><svg viewBox="0 0 16 16"><path d="M2 2.5h5v11H2z M9 2.5h5v11H9z M3.5 6h2 M10.5 6h2 M3.5 9h2 M10.5 9.5h2 M11.5 8.5v2"/></svg></button>
+      <button class="tool" data-act="mdPreview" id="tMd" title="Markdown 預覽" aria-label="Markdown 預覽" aria-pressed="false"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h13v9h-13z M4 10V6l1.75 2L7.5 6v4 M11 6v4 M9.5 8.5 11 10l1.5-1.5"/></svg></button>
+      <button class="tool" data-act="toggleHex" id="tHex" title="Hex 檢視" aria-label="Hex 檢視" aria-pressed="false"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h13v9h-13z"/><text x="8" y="10.4" text-anchor="middle" font-size="5.4" font-weight="700" font-family="monospace" fill="currentColor" stroke="none">HEX</text></svg></button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-act="cycleTheme" title="切換主題" aria-label="切換主題"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor"/></svg></button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" role="status" hidden><span id="bannerText"></span><button class="btn" id="bannerReload" type="button">重新載入</button></div>
+  <div class="tabs" id="tabs" role="tablist" aria-label="開啟的檔案"></div>
+
+  <main class="paper" id="paper">
+    <section class="pane is-focus" id="pane1" aria-label="主要檢視">
+      <div class="pane-head" id="p1Head" hidden><span>主要檢視</span><span class="pane-name" id="p1Name"></span></div>
+      <div class="ed" id="editor"></div>
+      <div class="hexwrap" id="hexWrap" hidden>
+        <div class="hexbar">
+          <label>每列 <select id="hxCols" aria-label="每列位元組數"><option value="8">8</option><option value="16" selected>16</option><option value="32">32</option></select></label>
+          <label>文字欄 <select id="hxEnc" aria-label="文字欄編碼"></select></label>
+          <button class="mini" id="hxIns" aria-pressed="false" title="切換插入 / 覆寫模式（Insert 鍵）">覆寫</button>
+          <input type="text" id="hxFind" spellcheck="false" autocomplete="off" placeholder="搜尋 hex：4D 5A ?? 00" aria-label="搜尋">
+          <div class="seg" id="hxFindMode" role="group" aria-label="搜尋類型"><button data-m="hex" aria-pressed="true">Hex</button><button data-m="text" aria-pressed="false">文字</button></div>
+          <button class="chip" id="hxCase" aria-pressed="false" title="大小寫須相符" hidden>Aa</button>
+          <button class="mini" id="hxPrev" title="上一個" aria-label="上一個">↑</button>
+          <button class="mini" id="hxNext" title="下一個" aria-label="下一個">↓</button>
+          <span class="find-info" id="hxInfo" aria-live="polite"></span>
+          <span class="grow"></span>
+          <button class="mini" id="hxGoto">跳至位址…</button>
+          <button class="mini" id="hxInspBtn" aria-pressed="true">數值解讀</button>
+          <button class="mini" id="hxText">以文字檢視</button>
+        </div>
+        <div class="hexmain">
+          <div class="hexview col-hex" id="hexView">
+            <div class="hexscroll" id="hexScroll"><div class="hexcontent" id="hexContent"><div class="hexhead" id="hexHead"></div><div class="hexbody" id="hexBody"><div class="hexrows" id="hexRows"></div></div></div></div>
+            <textarea class="hexinput" id="hexInput" aria-label="Hex 編輯區" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+          </div>
+          <aside class="hexinsp" id="hexInsp" aria-label="數值解讀">
+            <div class="insp-head"><strong>數值解讀</strong><div class="seg" id="hxEndian" role="group" aria-label="位元組順序"><button data-le="1" aria-pressed="true" title="Little-endian">小端</button><button data-le="0" aria-pressed="false" title="Big-endian">大端</button></div></div>
+            <dl class="insp" id="hexInspBody"></dl>
+          </aside>
+        </div>
+      </div>
+    </section>
+    <section class="pane" id="pane2" hidden aria-label="第二檢視">
+      <div class="pane-head">
+        <span>第二檢視</span>
+        <select id="p2Sel" aria-label="第二檢視顯示的分頁"></select>
+        <span class="cmp-bar" id="cmpBar" hidden>
+          <button class="mini" id="cmpPrev" title="上一個差異" aria-label="上一個差異">↑</button>
+          <button class="mini" id="cmpNext" title="下一個差異" aria-label="下一個差異">↓</button>
+          <span class="cmp-info" id="cmpInfo"></span>
+          <button class="mini" id="cmpEnd">結束比較</button>
+        </span>
+        <span class="grow"></span>
+        <label class="mini-check"><input type="checkbox" id="p2Sync" checked> 同步捲動</label>
+        <button class="mini" id="p2Close" title="關閉第二檢視" aria-label="關閉第二檢視">×</button>
+      </div>
+      <div class="ed" id="editor2"></div>
+    </section>
+    <section class="pane" id="pane3" hidden aria-label="Markdown 預覽">
+      <div class="pane-head">
+        <span>Markdown 預覽</span>
+        <span class="pane-name" id="mdName"></span>
+        <span class="md-note" id="mdNote" hidden>（不是 .md 檔，仍以 Markdown 顯示）</span>
+        <span class="grow"></span>
+        <label class="mini-check"><input type="checkbox" id="mdSync" checked> 同步捲動</label>
+        <button class="mini" id="mdCopy" title="把預覽結果的 HTML 複製到剪貼簿">複製 HTML</button>
+        <button class="mini" id="mdExport" title="下載含樣式的獨立 HTML 檔">匯出 HTML</button>
+        <button class="mini" id="mdClose" title="關閉預覽" aria-label="關閉 Markdown 預覽">×</button>
+      </div>
+      <div class="md-scroll" id="mdScroll"><article class="md-body" id="mdBody"></article></div>
+    </section>
+  </main>
+
+  <section class="find" id="findPanel" hidden aria-label="尋找與取代">
+    <div class="find-row">
+      <label class="field"><span>尋找</span><input id="findInput" type="text" spellcheck="false" autocomplete="off"></label>
+      <div class="seg" role="group" aria-label="搜尋模式">
+        <button id="modeNormal" data-mode="normal" aria-pressed="true" title="一般文字">一般</button>
+        <button id="modeExt" data-mode="ext" aria-pressed="false" title="延伸：\n \t \r \0 \xHH \uHHHH">延伸</button>
+        <button id="modeRegex" data-mode="regex" aria-pressed="false" title="規則運算式（JavaScript 語法，^ $ 以行為單位）">規則運算式</button>
+      </div>
+      <button class="chip" id="optCase" aria-pressed="false" title="大小寫須相符">Aa</button>
+      <button class="chip" id="optWord" aria-pressed="false" title="全字拼寫須相符">全字</button>
+      <button class="chip" id="optWrap" aria-pressed="true" title="到底後從頭繼續">環繞</button>
+      <button class="btn" id="btnPrev" title="上一個 (⇧Enter)">↑ 上一個</button>
+      <button class="btn btn-primary" id="btnNext" title="下一個 (Enter)">↓ 下一個</button>
+      <span class="find-info" id="findInfo" aria-live="polite"></span>
+      <button class="find-close" id="findClose" title="關閉 (Esc)" aria-label="關閉尋找面板">×</button>
+    </div>
+    <div class="find-row" id="listRow">
+      <button class="btn" id="btnListCur" title="把目前文件的所有符合項目列在下方結果面板">全部列出</button>
+      <button class="btn" id="btnListAll">在所有分頁中列出</button>
+      <button class="btn" id="btnMark" title="以紅色持續標記所有符合項目">標記全部</button>
+      <button class="chip" id="optBookmark" aria-pressed="false" title="標記時同時在符合的行加上書籤">標記時加書籤</button>
+      <button class="btn" id="btnClearMark">清除標記</button>
+    </div>
+    <div class="find-row" id="replaceRow" hidden>
+      <label class="field"><span>取代為</span><input id="replInput" type="text" spellcheck="false" autocomplete="off" placeholder="規則運算式可用 $1 或 \1"></label>
+      <button class="btn" id="btnReplace">取代</button>
+      <button class="btn" id="btnReplaceAll">全部取代</button>
+      <button class="btn" id="btnReplaceAllTabs">在所有分頁中全部取代</button>
+    </div>
+    <div class="find-row" id="filesRow" hidden>
+      <button class="btn" id="btnPickDir">選擇資料夾…</button>
+      <span class="dir-label" id="dirLabel">尚未選擇資料夾</span>
+      <label class="field"><span>篩選</span><input id="filterInput" type="text" spellcheck="false" autocomplete="off" placeholder="*.cs *.sql（空白代表全部檔案）"></label>
+      <label class="check"><input type="checkbox" id="skipDirs" checked> 略過 .git、node_modules、bin、obj 等</label>
+      <button class="btn btn-primary" id="btnFindInFiles">在檔案中尋找</button>
+    </div>
+  </section>
+
+  <section class="results" id="results" hidden aria-label="搜尋結果">
+    <div class="res-grip" id="resGrip" title="拖曳調整高度"></div>
+    <div class="res-head">
+      <strong id="resTitle">搜尋結果</strong>
+      <span class="grow"></span>
+      <button class="mini" id="resFold">全部收合</button>
+      <button class="mini" id="resClose" title="關閉搜尋結果" aria-label="關閉搜尋結果">×</button>
+    </div>
+    <div class="res-body" id="resBody"></div>
+  </section>
+
+  <footer class="status" id="status">
+    <span id="stLen">長度 0</span>
+    <span id="stLines">行數 1</span>
+    <span id="stPos">行 1，欄 1</span>
+    <span id="stSel">選取 0</span>
+    <span class="st-rec" id="stRec" hidden>● 錄製巨集中</span>
+    <span class="grow"></span>
+    <button class="st-btn" id="stEol" title="點擊切換行尾格式">Unix (LF)</button>
+    <button class="st-btn" id="stEnc" title="編碼選項">UTF-8</button>
+    <select id="stLang" aria-label="語言"></select>
+    <span id="stIns">INS</span>
+  </footer>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <h2 id="modalTitle"></h2>
+    <p id="modalText"></p>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+<div class="drop" id="drop" hidden>放開以開啟檔案</div>
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="fileInput" multiple hidden>
+<input type="file" id="dirInput" webkitdirectory multiple hidden>
+<input type="file" id="hexFileInput" multiple hidden>
+

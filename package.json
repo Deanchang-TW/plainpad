@@ -1,0 +1,20 @@
+{
+  "name": "plainpad",
+  "version": "0.8.0",
+  "private": true,
+  "description": "Notepad++-style text and hex editor that runs as a single web page",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node tests/run.mjs"
+  },
+  "devDependencies": {
+    "codemirror": "5.65.16",
+    "dompurify": "3.4.17",
+    "katex": "0.19.1",
+    "marked": "12.0.2",
+    "mermaid": "12.2.0",
+    "playwright": "1.64.1",
+    "terser": "5.31.0"
+  }
+}
