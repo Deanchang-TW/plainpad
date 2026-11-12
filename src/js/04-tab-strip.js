@@ -3,9 +3,9 @@ let dragIdx = null, dirtySig = "";
 function renderTabs(){
   const wrap = $("#tabs"); wrap.replaceChildren();
   tabs.forEach((t, i) => {
-    const tabEl = el("div", { class:"tab" + (i === active ? " is-active" : "") + (isDirty(t) ? " is-dirty" : "") + (isHex(t) ? " is-hex" : ""), role:"tab", "aria-selected": String(i === active), title: (t.path || t.name) + (isDirty(t) ? "（未儲存）" : "") + "\n雙擊重新命名，按右鍵看更多選項" });
+    const tabEl = el("div", { class:"tab" + (i === active ? " is-active" : "") + (isDirty(t) ? " is-dirty" : "") + (isHex(t) ? " is-hex" : ""), role:"tab", "aria-selected": String(i === active), title: (t.path || t.name) + (isDirty(t) ? tr("（未儲存）") : "") + "\n" + tr("雙擊重新命名，按右鍵看更多選項") });
     tabEl.tabIndex = i === active ? 0 : -1; tabEl.draggable = true;
-    const x = el("button", { class:"x", type:"button", text:"×", "aria-label":"關閉 " + t.name }); x.tabIndex = -1;
+    const x = el("button", { class:"x", type:"button", text:"×", "aria-label":tr("關閉 {name}", { name:t.name }) }); x.tabIndex = -1;
     x.addEventListener("click", e => { e.stopPropagation(); closeTab(tabs.indexOf(t)); });
     tabEl.append(el("span", { class:"dot" })); if (isHex(t)) tabEl.append(el("span", { class:"hexbadge", text:"HEX" }));
     tabEl.append(el("span", { class:"name", text:t.name }), x);
@@ -21,7 +21,7 @@ function renderTabs(){
     tabEl.addEventListener("dragend", () => { dragIdx = null; renderTabs(); });
     wrap.appendChild(tabEl);
   });
-  const plus = el("button", { class:"newtab", type:"button", text:"+", title:"新增分頁 (" + keyLabel("Alt-N") + ")", "aria-label":"新增分頁" });
+  const plus = el("button", { class:"newtab", type:"button", text:"+", title:tr("新增分頁 ({key})", { key:keyLabel("Alt-N") }), "aria-label":tr("新增分頁") });
   plus.addEventListener("click", newTab); wrap.appendChild(plus);
   dirtySig = tabs.map(t => isDirty(t) ? 1 : 0).join("");
   renderPaneHeads();
@@ -29,7 +29,7 @@ function renderTabs(){
 }
 function moveTab(from, to){ if (from === to || from < 0) return; const activeTab = cur(); const [t] = tabs.splice(from, 1); tabs.splice(to, 0, t); active = tabs.indexOf(activeTab); renderTabs(); persistSoon(); }
 async function renameTab(t = curT()){
-  const v = await promptText({ title:"重新命名", text:"副檔名決定語法高亮與下載時的檔案類型。", value:t.name, ok:"重新命名" });
+  const v = await promptText({ title:tr("重新命名"), text:tr("副檔名決定語法高亮與下載時的檔案類型。"), value:t.name, ok:tr("重新命名") });
   if (v == null) return; const name = v.trim(); if (!name) return;
   const oldExt = extOf(t.name); t.name = name; t.untitled = false;
   if (!isHex(t) && extOf(name) !== oldExt){ const l = langForName(name); if (l !== "text" || !oldExt) setLang(t, l); }

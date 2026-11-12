@@ -3,20 +3,20 @@ async function columnEditor(){
   const ed = cm, d = ed.getDoc();
   const body = el("div", { class:"form-grid" });
   body.innerHTML = `
-    <label class="radio span"><input type="radio" name="ceKind" id="ceKindText" value="text" checked> 插入文字</label>
-    <label for="ceText">文字</label><input type="text" id="ceText" data-autofocus spellcheck="false">
-    <label class="radio span"><input type="radio" name="ceKind" id="ceKindNum" value="num"> 插入數字</label>
+    <label class="radio span"><input type="radio" name="ceKind" id="ceKindText" value="text" checked> ${tr("插入文字")}</label>
+    <label for="ceText">${tr("文字")}</label><input type="text" id="ceText" data-autofocus spellcheck="false">
+    <label class="radio span"><input type="radio" name="ceKind" id="ceKindNum" value="num"> ${tr("插入數字")}</label>
     <div class="form-sub span" id="ceNum" aria-disabled="true">
-      <label for="ceStart">起始</label><input type="number" id="ceStart" value="1">
-      <label for="ceStep">遞增</label><input type="number" id="ceStep" value="1">
-      <label for="ceRepeat">重複</label><input type="number" id="ceRepeat" value="1" min="1">
-      <label for="ceFmt">格式</label><select id="ceFmt"><option value="10">十進位</option><option value="16">十六進位</option><option value="8">八進位</option><option value="2">二進位</option></select>
-      <label class="radio span" style="grid-column:1 / -1"><input type="checkbox" id="ceZero"> 前面補零（否則以空白對齊）</label>
+      <label for="ceStart">${tr("起始")}</label><input type="number" id="ceStart" value="1">
+      <label for="ceStep">${tr("遞增")}</label><input type="number" id="ceStep" value="1">
+      <label for="ceRepeat">${tr("重複")}</label><input type="number" id="ceRepeat" value="1" min="1">
+      <label for="ceFmt">${tr("格式")}</label><select id="ceFmt"><option value="10">${tr("十進位")}</option><option value="16">${tr("十六進位")}</option><option value="8">${tr("八進位")}</option><option value="2">${tr("二進位")}</option></select>
+      <label class="radio span" style="grid-column:1 / -1"><input type="checkbox" id="ceZero"> ${tr("前面補零（否則以空白對齊）")}</label>
     </div>`;
   const sync = () => { const num = body.querySelector("#ceKindNum").checked; body.querySelector("#ceNum").setAttribute("aria-disabled", String(!num)); body.querySelector("#ceText").disabled = num; body.querySelectorAll("#ceNum input, #ceNum select").forEach(x => x.disabled = !num); };
   body.querySelectorAll("input[name=ceKind]").forEach(r => r.addEventListener("change", () => { sync(); (r.value === "num" ? body.querySelector("#ceStart") : body.querySelector("#ceText")).focus(); }));
   sync();
-  const r = await ask({ title:"欄編輯器", text:"多重游標或矩形選取時，插在每個游標位置；沒有選取時，從游標所在行一路插到文件結尾，太短的行會補空白。", body, actions:[{ id:"cancel", label:"取消" }, { id:"ok", label:"插入", primary:true }] });
+  const r = await ask({ title:tr("欄編輯器"), text:tr("多重游標或矩形選取時，插在每個游標位置；沒有選取時，從游標所在行一路插到文件結尾，太短的行會補空白。"), body, actions:[{ id:"cancel", label:tr("取消") }, { id:"ok", label:tr("插入"), primary:true }] });
   if (r !== "ok"){ ed.focus(); return; }
   const isNum = body.querySelector("#ceKindNum").checked;
   const ts = ed.getOption("tabSize"); const sels = d.listSelections(); const targets = [];
@@ -45,6 +45,6 @@ async function columnEditor(){
   }
   if (!values.some(v => v)) { ed.focus(); return; }
   ed.operation(() => { for (let i = targets.length - 1; i >= 0; i--) d.replaceRange(targets[i].pad + values[i], targets[i].pos, null, "+column"); });
-  ed.focus(); toast(`已在 ${fmtNum(targets.length)} 行插入`);
+  ed.focus(); toast(tr("已在 {n} 行插入", { n:fmtNum(targets.length) }));
 }
 

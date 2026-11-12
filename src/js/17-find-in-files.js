@@ -3,8 +3,8 @@ let dirFiles = null, dirName = "", searchToken = 0;
 const SKIP_DIRS = /(^|\/)(\.git|\.svn|\.hg|node_modules|bin|obj|\.vs|\.idea|dist|build|packages)\//i;
 function pickDir(){ const d = $("#dirInput"); d.value = ""; d.click(); }
 $("#dirInput").addEventListener("change", e => {
-  dirFiles = [...e.target.files]; dirName = ((dirFiles[0] && dirFiles[0].webkitRelativePath) || "").split("/")[0] || "資料夾";
-  $("#dirLabel").textContent = `${dirName}（${fmtNum(dirFiles.length)} 個檔案）`; $("#dirLabel").title = dirName;
+  dirFiles = [...e.target.files]; dirName = ((dirFiles[0] && dirFiles[0].webkitRelativePath) || "").split("/")[0] || tr("資料夾");
+  $("#dirLabel").textContent = tr("{folder}（{n} 個檔案）", { folder:dirName, n:fmtNum(dirFiles.length) }); $("#dirLabel").title = dirName;
   if ($("#findInput").value) findInFiles();
 });
 $("#btnPickDir").addEventListener("click", pickDir);
@@ -21,7 +21,7 @@ async function findInFiles(){
   const groups = []; let total = 0, skipped = 0;
   for (let i = 0; i < list.length; i++){
     if (token !== searchToken) return;
-    if (i % 25 === 0){ info.textContent = `搜尋中… ${fmtNum(i)} / ${fmtNum(list.length)}`; await new Promise(r => setTimeout(r, 0)); }
+    if (i % 25 === 0){ info.textContent = tr("搜尋中… {i} / {n}", { i:fmtNum(i), n:fmtNum(list.length) }); await new Promise(r => setTimeout(r, 0)); }
     const f = list[i]; const path = f.webkitRelativePath || f.name;
     try {
       const buf = await f.arrayBuffer(); if (looksBinary(buf)){ skipped++; continue; }
@@ -31,7 +31,7 @@ async function findInFiles(){
     } catch(e){ skipped++; }
     if (total >= 50000) break;
   }
-  info.textContent = `在 ${fmtNum(list.length)} 個檔案中找到 ${fmtNum(total)} 筆`;
-  showResults(`在「${dirName}」搜尋「${$("#findInput").value}」：${fmtNum(total)} 筆，${fmtNum(groups.length)} 個檔案` + (skipped ? `（略過 ${skipped} 個二進位或無法讀取的檔案）` : ""), groups);
+  info.textContent = tr("在 {files} 個檔案中找到 {n} 筆", { files:fmtNum(list.length), n:fmtNum(total) });
+  showResults(tr("在「{folder}」搜尋「{text}」：{n} 筆，{files} 個檔案", { folder:dirName, text:$("#findInput").value, n:fmtNum(total), files:fmtNum(groups.length) }) + (skipped ? tr("（略過 {n} 個二進位或無法讀取的檔案）", { n:skipped }) : ""), groups);
 }
 

@@ -22,7 +22,15 @@ function applySettings(){
   if (hx.tab){ hx.sig = ""; hexRefresh(); }
 }
 function setSetting(k, v){ settings[k] = v; applySettings(); persistSoon(); }
-const THEME_LABEL = { system:"跟隨系統", light:"淺色", dark:"深色" };
-const ICON_LABEL = { color:"彩色", mono:"單色" };
-const FOLD_LABEL = { guides:"指引線（Notepad++ 樣式）", chevrons:"箭頭（VS Code 樣式）" };
+/* The interface language is read once when the page starts (00-i18n.js), so a change is saved and the page reloads.
+   Tabs, cursors and unsaved edits are all in the session, so nothing is lost. */
+function setUiLang(k){
+  if ((settings.uiLang || "auto") === k) return;
+  if (!session.primary){ toast(tr("另一個視窗正在使用工作階段，請在那個視窗切換語言")); return; }
+  settings.uiLang = k;
+  Promise.resolve(persist()).then(() => location.reload());   // reload only once the tab contents are written
+}
+const THEME_LABEL = { system:tr("跟隨系統"), light:tr("淺色"), dark:tr("深色") };
+const ICON_LABEL = { color:tr("彩色"), mono:tr("單色") };
+const FOLD_LABEL = { guides:tr("指引線（Notepad++ 樣式）"), chevrons:tr("箭頭（VS Code 樣式）") };
 

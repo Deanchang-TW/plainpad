@@ -19,9 +19,9 @@ function ask({ title, text = "", body = null, actions }){
     if (input){ input.focus(); if (input.select) input.select(); } else { const p = acts.querySelector(".btn-primary") || acts.querySelector("button"); p && p.focus(); }
   });
 }
-async function promptText({ title, text, value = "", ok = "確定" }){
+async function promptText({ title, text, value = "", ok = tr("確定") }){
   const input = el("input", { type:"text", id:"modalInput", spellcheck:"false" }); input.value = value;
-  const r = await ask({ title, text, body: input, actions: [{ id:"cancel", label:"取消" }, { id:"ok", label: ok, primary:true }] });
+  const r = await ask({ title, text, body: input, actions: [{ id:"cancel", label:tr("取消") }, { id:"ok", label: ok, primary:true }] });
   return r === "ok" ? input.value : null;
 }
 

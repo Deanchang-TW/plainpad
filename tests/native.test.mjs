@@ -16,7 +16,8 @@ const decode = b64 => Buffer.from(b64, "base64").toString("utf8");
 export default [
   { name: "inside the macOS app, files open from the bridge and save back to their path without a prompt", async fn({ open }){
     const p = await open({ init: fakeBridge, downloads: false });
-    assert.deepEqual(await p.evaluate(() => window.__bridge.map(m => m.type).filter(t => t !== "title" && t !== "watch")), ["ready"], "the page tells the app when it has booted");
+    assert.deepEqual(await p.evaluate(() => window.__bridge.map(m => m.type).filter(t => t !== "title" && t !== "watch")), ["ready", "locale"], "the page tells the app when it has booted, and in which language");
+    assert.deepEqual(await p.evaluate(() => window.__bridge.find(m => m.type === "locale")), { type: "locale", lang: "zh-TW", choice: "auto" });
 
     await p.ctx.route("**/__file/*", r => r.fulfill({ body: "hello\n", contentType: "application/octet-stream" }));
     await p.evaluate(() => window.__ppNative.open([{ token: "t1", name: "note.txt", path: "/Users/me/note.txt" }]));

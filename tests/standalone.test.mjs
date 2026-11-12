@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 
 /* The standalone file must work from disk with no network at all. */
 async function openStandalone(browser, dist){
-  const ctx = await browser.newContext({ acceptDownloads: true, viewport: { width: 1360, height: 860 } });
+  const ctx = await browser.newContext({ acceptDownloads: true, locale: "zh-TW", viewport: { width: 1360, height: 860 } });
   await applyPlatform(ctx);
   const blocked = [];
   await ctx.route(/^https?:/, r => { blocked.push(r.request().url()); r.abort(); });

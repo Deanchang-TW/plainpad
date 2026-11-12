@@ -4,7 +4,7 @@ buildMenubar();
 session.primary = await acquireSession();
 let restored = false;
 if (session.primary) restored = await restore();
-else { applyStoredSettings(readJSON(STORE_KEY) || readJSON(OLD_STORE_KEY)); showSecondaryBanner(); tabs.push(makeTab({ name:"新文件（不會保存）", untitled:true })); active = -1; activateTab(0, true); restored = true; }
+else { applyStoredSettings(readJSON(STORE_KEY) || readJSON(OLD_STORE_KEY)); showSecondaryBanner(); tabs.push(makeTab({ name:tr("新文件（不會保存）"), untitled:true })); active = -1; activateTab(0, true); restored = true; }
 if (!restored){
   tabs.push(makeTab({ name:HELP_NAME, text:HELP }));
   tabs.push(makeTab({ name:"monthly-orders.sql", text:SAMPLE_SQL, lang:"mssql", eol:"CRLF" }));

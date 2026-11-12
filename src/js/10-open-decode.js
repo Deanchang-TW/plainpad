@@ -22,9 +22,9 @@ function looksBinary(buf){
   return nulls > 8;
 }
 async function openFileObj(f, path){
-  if (f.size > 25 * 1024 * 1024) return openHexFile(f, path, "超過 25 MB，以 Hex 檢視開啟");
+  if (f.size > 25 * 1024 * 1024) return openHexFile(f, path, tr("超過 25 MB，以 Hex 檢視開啟"));
   const buf = await f.arrayBuffer();
-  if (looksBinary(buf)) return openHexFile(f, path, "是二進位檔，以 Hex 檢視開啟");
+  if (looksBinary(buf)) return openHexFile(f, path, tr("是二進位檔，以 Hex 檢視開啟"));
   const key = path || f.name;
   // A clean tab for the same file is replaced rather than duplicated. Without a path, only the name is known, so the tab
   // must still hold the bytes it was opened from; with a path (the macOS app), the path alone identifies the file.
@@ -32,8 +32,8 @@ async function openFileObj(f, path){
   const r = decode(buf);
   const t = makeTab({ name:f.name, path: path || null, text:r.text, eol:detectEol(r.text), bom:r.bom, encoding:r.encoding, bytes:buf });
   const mixed = mixedEolNote(r.text);
-  if (r.guessed) toast(`「${f.name}」不是 UTF-8，判斷為 ${ENC_LABEL[r.encoding]}。若顯示亂碼，請從「編碼 > 以其他編碼重新開啟」換一個`);
-  else if (mixed) toast(`「${f.name}」混用了多種行尾（${mixed}），存檔時會統一成 ${EOL_LABEL[t.eol]}`);
+  if (r.guessed) toast(tr("「{name}」不是 UTF-8，判斷為 {enc}。若顯示亂碼，請從「編碼 > 以其他編碼重新開啟」換一個", { name:f.name, enc:ENC_LABEL[r.encoding] }));
+  else if (mixed) toast(tr("「{name}」混用了多種行尾（{kinds}），存檔時會統一成 {eol}", { name:f.name, kinds:mixed, eol:EOL_LABEL[t.eol] }));
   if (mixed) t.mixedEol = mixed;
   if (existing >= 0){ if (tabs[existing] === split.tab) showInPane2(t, true); tabs[existing] = t; activateTab(existing, true); renderTabs(); persistSoon(); }
   else addTab(t);
@@ -41,7 +41,7 @@ async function openFileObj(f, path){
 }
 async function openFiles(list){
   let opened = 0;
-  for (const f of [...list]){ try { if (await openFileObj(f)) opened++; } catch(e){ toast(`無法讀取「${f.name}」`); } }
+  for (const f of [...list]){ try { if (await openFileObj(f)) opened++; } catch(e){ toast(tr("無法讀取「{name}」", { name:f.name })); } }
   if (opened) focusEditor();
 }
 function openFile(){ if (NATIVE){ nativeCall({ type:"openPanel" }); return; } const fi = $("#fileInput"); fi.value = ""; fi.click(); }
@@ -56,13 +56,13 @@ window.addEventListener("drop", e => { if (!hasFiles(e)) return; e.preventDefaul
 
 async function reopenAs(enc){
   const t = curT();
-  if (!t.bytes){ toast("只有這次從檔案開啟的分頁可以換編碼重新開啟"); return; }
-  if (isDirty(t)){ const r = await ask({ title:"放棄目前的修改？", text:"以其他編碼重新開啟會用原始檔案內容取代目前的文字。", actions:[{ id:"cancel", label:"取消" }, { id:"ok", label:"重新開啟", primary:true }] }); if (r !== "ok") return; }
+  if (!t.bytes){ toast(tr("只有這次從檔案開啟的分頁可以換編碼重新開啟")); return; }
+  if (isDirty(t)){ const r = await ask({ title:tr("放棄目前的修改？"), text:tr("以其他編碼重新開啟會用原始檔案內容取代目前的文字。"), actions:[{ id:"cancel", label:tr("取消") }, { id:"ok", label:tr("重新開啟"), primary:true }] }); if (r !== "ok") return; }
   try {
     const r = decode(t.bytes, enc);
     t.doc.setValue(r.text); t.doc.clearHistory(); t.encoding = r.encoding; t.bom = r.bom; t.eol = detectEol(r.text);
     t.cleanGen = t.doc.changeGeneration(true); t.forceDirty = false;
-    renderTabs(); updateStatus(); persistSoon(); toast("已以 " + ENC_LABEL[r.encoding] + " 重新開啟");
-  } catch(e){ toast("這個瀏覽器不支援 " + enc); }
+    renderTabs(); updateStatus(); persistSoon(); toast(tr("已以 {enc} 重新開啟", { enc:ENC_LABEL[r.encoding] }));
+  } catch(e){ toast(tr("這個瀏覽器不支援 {enc}", { enc })); }
 }
 

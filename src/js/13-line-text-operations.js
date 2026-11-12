@@ -10,11 +10,11 @@ function transformLines(fn, label){
   const [a, b] = rng || [d.firstLine(), d.lastLine()];
   const lines = []; for (let i = a; i <= b; i++) lines.push(d.getLine(i));
   const out = fn(lines);
-  if (out.join("\n") === lines.join("\n")){ toast("沒有需要變更的內容"); return; }
+  if (out.join("\n") === lines.join("\n")){ toast(tr("沒有需要變更的內容")); return; }
   d.replaceRange(out.join("\n"), Pos(a, 0), Pos(b), "+" + label);
   if (rng) d.setSelection(Pos(a, 0), Pos(a + out.length - 1));
   const diff = lines.length - out.length;
-  toast(label + (rng ? "（選取範圍）" : "（整份文件）") + (diff > 0 ? `：移除 ${fmtNum(diff)} 行` : ""));
+  toast(label + (rng ? tr("（選取範圍）") : tr("（整份文件）")) + (diff > 0 ? tr("：移除 {n} 行", { n:fmtNum(diff) }) : ""));
 }
 function duplicateLine(){
   cm.operation(() => {
@@ -55,7 +55,7 @@ const toTitle = s => s.toLowerCase().replace(/(^|[\s_\-./"'(])(\p{L})/gu, (a, p,
 function expandTabs(l, ts){ let out = "", col = 0; for (const ch of l){ if (ch === "\t"){ const n = ts - (col % ts); out += " ".repeat(n); col += n; } else { out += ch; col++; } } return out; }
 function toggleComment(){
   const mode = cm.getModeAt(cm.getCursor());
-  if (!mode.lineComment && !mode.blockCommentStart){ toast("這個語言沒有註解語法，先從右下角選擇語言"); return; }
+  if (!mode.lineComment && !mode.blockCommentStart){ toast(tr("這個語言沒有註解語法，先從右下角選擇語言")); return; }
   cm.toggleComment({ indent:true });
 }
 function insertTimestamp(){
@@ -66,20 +66,20 @@ function applyText(fn, label, wholeLang){
   try {
     if (cm.somethingSelected()) cm.replaceSelections(cm.getSelections().map(fn), "around");
     else { const d = cm.getDoc(); const out = fn(d.getValue()); d.replaceRange(out, Pos(d.firstLine(), 0), Pos(d.lastLine()), "+tool"); if (wholeLang && curT().langId === "text") setLang(curT(), wholeLang); }
-    toast(label + "完成");
-  } catch(e){ toast(label + "失敗：" + e.message); }
+    toast(tr("{label}完成", { label }));
+  } catch(e){ toast(tr("{label}失敗：{reason}", { label, reason:e.message })); }
 }
 const b64enc = s => { const b = new TextEncoder().encode(s); let bin = ""; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(bin); };
 const b64dec = s => { const bin = atob(s.replace(/\s+/g, "")); const b = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i); return new TextDecoder("utf-8", { fatal:true }).decode(b); };
 function wordCount(){
   const text = cm.somethingSelected() ? cm.getSelections().join("\n") : cm.getValue();
-  const cjkRe = /[㐀-鿿豈-﫿぀-ヿ가-힯]/g;
+  const cjkRe = /[㐀-鿿豈-﫿぀-ヿ가-힯]/g;   // i18n-ignore: character ranges, not text
   const cjk = (text.match(cjkRe) || []).length;
   const words = (text.replace(cjkRe, " ").match(/[\p{L}\p{N}_'-]+/gu) || []).length;
-  const rows = [["字元", [...text].length], ["字元（不含空白）", [...text.replace(/\s/g, "")].length], ["中日韓文字", cjk], ["英文等單字", words], ["行數", text ? text.split("\n").length : 0], ["UTF-8 位元組", new TextEncoder().encode(text).length]];
+  const rows = [[tr("字元"), [...text].length], [tr("字元（不含空白）"), [...text.replace(/\s/g, "")].length], [tr("中日韓文字"), cjk], [tr("英文等單字"), words], [tr("行數"), text ? text.split("\n").length : 0], [tr("UTF-8 位元組"), new TextEncoder().encode(text).length]];
   const dl = el("dl", { class:"stats" });
   rows.forEach(([k, v]) => dl.append(el("dt", { text:k }), el("dd", { text:fmtNum(v) })));
-  ask({ title: cm.somethingSelected() ? "字數統計（選取範圍）" : "字數統計（整份文件）", body: dl, actions:[{ id:"ok", label:"關閉", primary:true }] }).then(() => focusEditor());
+  ask({ title: cm.somethingSelected() ? tr("字數統計（選取範圍）") : tr("字數統計（整份文件）"), body: dl, actions:[{ id:"ok", label:tr("關閉"), primary:true }] }).then(() => focusEditor());
 }
 async function hashes(){
   const t = curT(); const sel = cm.somethingSelected();
@@ -89,18 +89,18 @@ async function hashes(){
   for (const algo of ["SHA-1", "SHA-256", "SHA-512"]){
     let hex = "";
     try { const buf = await crypto.subtle.digest(algo, data); hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join(""); }
-    catch(e){ hex = "這個瀏覽器無法計算"; }
-    const btn = el("button", { class:"mini", type:"button", text:"複製" });
-    btn.addEventListener("click", async () => { btn.textContent = (await copyText(hex)) ? "已複製" : "失敗"; });
+    catch(e){ hex = tr("這個瀏覽器無法計算"); }
+    const btn = el("button", { class:"mini", type:"button", text:tr("複製") });
+    btn.addEventListener("click", async () => { btn.textContent = (await copyText(hex)) ? tr("已複製") : tr("失敗"); });
     list.append(el("div", { class:"hash-row" }, el("span", { text:algo }), el("code", { text:hex }), btn));
   }
-  await ask({ title: sel ? "雜湊值（選取範圍）" : "雜湊值（整份文件）", text:`以 ${ENC_LABEL[enc]} 計算，行尾使用 ${EOL_LABEL[t.eol]}${t.bom && !sel && bomCapable(enc) ? "，含 BOM" : ""}，與存檔後的檔案一致。`, body:list, actions:[{ id:"ok", label:"關閉", primary:true }] });
+  await ask({ title: sel ? tr("雜湊值（選取範圍）") : tr("雜湊值（整份文件）"), text:tr("以 {enc} 計算，行尾使用 {eol}，與存檔後的檔案一致。", { enc:ENC_LABEL[enc] + (t.bom && !sel && bomCapable(enc) ? " BOM" : ""), eol:EOL_LABEL[t.eol] }), body:list, actions:[{ id:"ok", label:tr("關閉"), primary:true }] });
   focusEditor();
 }
 async function gotoLine(){
   const d = cm.getDoc();
-  const v = await promptText({ title:"跳至行", text:`輸入 1 到 ${fmtNum(d.lineCount())}，也可以用「行:欄」。`, value: String(d.getCursor().line + 1), ok:"跳至" });
-  if (v == null) return; const m = /^\s*(\d+)(?:\s*[:,]\s*(\d+))?\s*$/.exec(v); if (!m){ toast("請輸入數字"); return; }
+  const v = await promptText({ title:tr("跳至行"), text:tr("輸入 1 到 {n}，也可以用「行:欄」。", { n:fmtNum(d.lineCount()) }), value: String(d.getCursor().line + 1), ok:tr("跳至") });
+  if (v == null) return; const m = /^\s*(\d+)(?:\s*[:,]\s*(\d+))?\s*$/.exec(v); if (!m){ toast(tr("請輸入數字")); return; }
   const line = Math.min(Math.max(1, +m[1]), d.lineCount()) - 1; const ch = m[2] ? +m[2] - 1 : 0;
   focusEditor(); cm.setCursor(Pos(line, ch)); cm.scrollIntoView(null, cm.getScrollInfo().clientHeight / 3);
 }

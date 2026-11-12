@@ -1,7 +1,7 @@
 /* ---------- encodings ----------
    Tab encodings are canonical WHATWG labels. Saving re-encodes in the same encoding the file was opened with.
    Legacy encoders are built from the browser's own decoder, so whatever was read can be written back the same way. */
-const ENC_LABEL = Object.fromEntries(ENCODINGS.map(([id, l]) => [id, l.replace(/（.*）/, "")]));
+const ENC_LABEL = Object.fromEntries(ENCODINGS.map(([id, l]) => [id, l.replace(/\s*[(\uFF08].*[)\uFF09]$/, "")]));
 const LEGACY_ENC = { "UTF-8":"utf-8", "UTF-16 LE":"utf-16le", "UTF-16 BE":"utf-16be", "Big5":"big5", "GB18030":"gb18030", "Shift_JIS":"shift_jis", "EUC-KR":"euc-kr", "Windows-1252":"windows-1252" };
 function normEnc(e){ return ENC_LABEL[e] ? e : LEGACY_ENC[e] || "utf-8"; }
 function encLabel(t){ const e = normEnc(t.encoding); return ENC_LABEL[e] + (t.bom && bomCapable(e) ? " BOM" : ""); }
@@ -49,7 +49,7 @@ function encodeText(text, enc, bom){
 const LANG_HINTS = (() => {
   const set = s => new Set([...s]);
   return {
-    han: set("的一是不了在人有我他這个個們们中來来上大為为和國国地到以說说時时要就出會会可也你對对生能而子那得於于著着下自之年過过發发後后作裡里用道行所然家種种事成方多經经麼么去法學学如都同現现當当沒没動动面起看定天分還还進进好小部其些主樣样理心她本前開开但因只從从想實实日者意無无力它與与長长把機机十民第公此已工使情明性知全三又關关點点正業业外將将兩两高間间由問问很最重並并物手應应向頭头文體体政美相見见被利什二等產产或新己制身果加西斯月話话合回特代內内信表化老給给世位次度門门任常先海通教兒儿原東东聲声提立及比員员解水名真論论處处走義义各入幾几口認认條条平系氣气題题活更別别打女變变四神總总何電电數数安少報报才結结反受目太量再感建務务做接必場场件計计管期市直資资命山金指"),
+    han: set("的一是不了在人有我他這个個們们中來来上大為为和國国地到以說说時时要就出會会可也你對对生能而子那得於于著着下自之年過过發发後后作裡里用道行所然家種种事成方多經经麼么去法學学如都同現现當当沒没動动面起看定天分還还進进好小部其些主樣样理心她本前開开但因只從从想實实日者意無无力它與与長长把機机十民第公此已工使情明性知全三又關关點点正業业外將将兩两高間间由問问很最重並并物手應应向頭头文體体政美相見见被利什二等產产或新己制身果加西斯月話话合回特代內内信表化老給给世位次度門门任常先海通教兒儿原東东聲声提立及比員员解水名真論论處处走義义各入幾几口認认條条平系氣气題题活更別别打女變变四神總总何電电數数安少報报才結结反受目太量再感建務务做接必場场件計计管期市直資资命山金指"),   // i18n-ignore: character frequency data, not text
     kana: /[ぁ-ヺ]/, hangul: set("이의다는에하을를가고지기로한서사대도자리수아일나시정어해인구들것있그보게국만상전부등적주제으와성생장무위동년과소각연경문화미우저학했니요면원진개중마공비여라실터신오내될계은할거히반")
   };
 })();
