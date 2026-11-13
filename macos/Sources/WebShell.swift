@@ -13,6 +13,7 @@ import WebKit
 ///   { type: "locale", lang, choice }                     the interface language, and whether it was chosen or "auto"
 ///   { type: "watch", files: [{ path, mtime }] }           the files the tabs came from, with the modification time the
 ///                                                         page last saw (null: unknown, take the file's current one)
+/// Files dropped on the window are opened by the app like files from Finder (see FileDropWebView), not by the page.
 /// The app calls back into the page through `window.__ppNative.run(name)`, `.open(items)`, `.changed(items)` and
 /// `.flush()`. open and changed items carry { token, name, path, mtime }; a changed item for a file that is gone is
 /// { path, deleted: true }. Modification times are milliseconds since 1970, and save replies carry the new one too.
@@ -43,7 +44,9 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
         config.websiteDataStore = .default()
         config.setURLSchemeHandler(self, forURLScheme: Self.scheme)
         config.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "plainpad")
-        webView = WKWebView(frame: .zero, configuration: config)
+        let view = FileDropWebView(frame: .zero, configuration: config)
+        view.onDropFiles = { [weak self] urls in self?.open(urls) }
+        webView = view
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.allowsMagnification = false
@@ -307,5 +310,24 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
 
     private func jsString(_ s: String) -> String {
         String(data: try! JSONSerialization.data(withJSONObject: [s]), encoding: .utf8)!.dropFirst().dropLast().description
+    }
+}
+
+/// A file dropped from Finder reaches the page as a File object with a name but no path, so its tab could neither save
+/// back to the file nor notice changes made elsewhere. File drops are taken here and opened through WebShell.open, like
+/// files from Open With or the Dock. Other drags (text, links, moving tabs) still go to the page.
+final class FileDropWebView: WKWebView {
+    var onDropFiles: (([URL]) -> Void)?
+
+    private func droppedFiles(_ info: NSDraggingInfo) -> [URL] {
+        let urls = info.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+        return urls.filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile == true }
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        let urls = droppedFiles(sender)
+        guard !urls.isEmpty, let onDropFiles else { return super.performDragOperation(sender) }
+        onDropFiles(urls)
+        return true
     }
 }

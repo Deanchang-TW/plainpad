@@ -52,7 +52,10 @@ const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includ
 window.addEventListener("dragenter", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $("#drop").hidden = false; });
 window.addEventListener("dragover", e => { if (!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
 window.addEventListener("dragleave", e => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $("#drop").hidden = true; });
-window.addEventListener("drop", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; $("#drop").hidden = true; openFiles(e.dataTransfer.files); });
+window.addEventListener("drop", e => { if (!hasFiles(e)) return; e.preventDefault(); endFileDrag(); openFiles(e.dataTransfer.files); });
+/* Hides the "drop to open" overlay. The macOS app takes file drops itself (so the tab knows the file's path) and the page
+   then sees the drag start but never the drop. */
+function endFileDrag(){ dragDepth = 0; $("#drop").hidden = true; }
 
 async function reopenAs(enc){
   const t = curT();

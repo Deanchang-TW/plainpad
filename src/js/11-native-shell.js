@@ -1,7 +1,7 @@
 /* ---------- macOS app shell ----------
    Inside the app (macos/) the page runs in a WKWebView that registers the "plainpad" message handler. Saving goes through
    NSSavePanel, or straight back to the file's path when the tab came from disk; opening comes from NSOpenPanel, Finder or
-   the Dock; the menu bar calls run(). Only what the app needs is put on window, and only when the handler exists. */
+   the Dock, or a file dropped on the window; the menu bar calls run(). Only what the app needs is put on window, and only when the handler exists. */
 function nativeCall(msg){ return window.webkit.messageHandlers.plainpad.postMessage(msg); }
 function bytesToBase64(data){
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.slice(r.result.indexOf(",") + 1)); r.onerror = () => rej(r.error); r.readAsDataURL(data instanceof Blob ? data : new Blob([data])); });
@@ -16,6 +16,7 @@ const nativeDownloads = {
 /* Files picked natively: the app serves each one once at __file/<token> under the page's own origin, so even large files
    arrive as a Blob without a round trip through a string. */
 async function nativeOpen(items){
+  endFileDrag();
   let opened = 0;
   for (const it of items){
     try {

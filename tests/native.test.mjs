@@ -20,7 +20,10 @@ export default [
     assert.deepEqual(await p.evaluate(() => window.__bridge.find(m => m.type === "locale")), { type: "locale", lang: "en", choice: "auto" });
 
     await p.ctx.route("**/__file/*", r => r.fulfill({ body: "hello\n", contentType: "application/octet-stream" }));
+    /* A file dropped on the window is opened by the app, so the page saw the drag begin (its overlay is up) but gets no drop. */
+    await p.evaluate(() => { document.querySelector("#drop").hidden = false; });
     await p.evaluate(() => window.__ppNative.open([{ token: "t1", name: "note.txt", path: "/Users/me/note.txt" }]));
+    assert.equal(await p.evaluate(() => document.querySelector("#drop").hidden), true, "the drop overlay goes away");
     await p.waitForFunction(() => window.__plainpad.tabs().some(t => t.path === "/Users/me/note.txt"));
     assert.equal(await p.evaluate(() => window.__plainpad.cmMain.getValue()), "hello\n");
     const titles = () => p.evaluate(() => window.__bridge.filter(m => m.type === "title").map(m => [m.name, m.path, m.dirty].join("|")));
