@@ -2,6 +2,7 @@
   "name": "plainpad",
   "version": "0.8.0",
   "private": true,
+  "license": "MIT",
   "description": "Notepad++-style text and hex editor that runs as a single web page",
   "type": "module",
   "scripts": {

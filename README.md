@@ -111,6 +111,10 @@ tests/*.test.mjs     瀏覽器測試；tests/fixtures 是樣本檔與預期輸�
 - 同一個瀏覽器同時開兩個視窗時，第二個視窗不會保存內容，並會顯示提示。
 - 超過 200 MB 的 Hex 分頁重新整理後不會保留。
 
+## 授權
+
+MIT，見 [LICENSE](LICENSE)。打包進頁面的函式庫（CodeMirror、marked、Mermaid、KaTeX 等）各自沿用原本的授權。
+
 ---
 
 <a id="english"></a>
@@ -239,3 +243,7 @@ libraries from the relative path `vendor/...`, and the build checks that every l
   extensions must be zipped or get a .txt suffix. The standalone file has no such restriction.
 - When two windows of the same browser are open at once, the second one does not keep its content and shows a notice.
 - Hex tabs over 200 MB are not kept across a reload.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The bundled libraries (CodeMirror, marked, Mermaid, KaTeX and others) keep their own licenses.
