@@ -1,6 +1,6 @@
 # Plainpad：專案慣例
 
-Notepad++ 風格的網頁編輯器（文字、Hex、Markdown 預覽）。個人專案，GitHub：`Deanchang-TW/plainpad`（私有）。
+Notepad++ 風格的網頁編輯器（文字、Hex、Markdown 預覽）。個人專案，GitHub：`Deanchang-TW/plainpad`（公開）。
 這個 repo 是唯一的原始碼。`dist/` 是建置產物，不進版本控制，也不要手改。
 
 ## 指令
