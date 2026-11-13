@@ -292,7 +292,7 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
         return nil
     }
 
-    // <input type="file"> in the page (the folder picker for 在檔案中尋找 uses this).
+    // <input type="file"> in the page (the folder picker for Find in files uses this).
     func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping ([URL]?) -> Void) {
         let panel = NSOpenPanel()
