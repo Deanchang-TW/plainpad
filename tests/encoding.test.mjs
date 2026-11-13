@@ -24,7 +24,7 @@ export default [
     for (const [file, enc, label] of CASES){
       const r = await openFile(p, join(fixtures, "enc", file + ".txt"));
       assert.equal(r.enc, enc, `${file} detected`); assert.equal(r.status, label);
-      if (file === "mixed") assert.match(r.toast, /混用了多種行尾（CRLF 3 行、LF 1 行）/);
+      if (file === "mixed") assert.match(r.toast, /mixes line endings \(CRLF 3 lines, LF 1 line\)/);
       await p.evaluate(() => { const c = window.__plainpad.cmMain; c.replaceRange("OK", { line: c.lastLine(), ch: 0 }); });
       await save(p);
     }
@@ -38,7 +38,7 @@ export default [
     await openFile(p, join(fixtures, "enc", "tw-big5.txt"));
     await p.evaluate(() => window.__plainpad.cmMain.replaceRange("笑😀", { line:0, ch:0 }));
     await p.keyboard.press(`${MOD}+s`); await p.waitForTimeout(200);
-    assert.match(await p.textContent("#modalTitle"), /有 1 個字元無法用 Big5 儲存/);
+    assert.match(await p.textContent("#modalTitle"), /1 character can't be saved in Big5/);
     await p.click("#modalActions .btn-primary"); await p.waitForTimeout(200);
     const [s] = await saves(p);
     assert.ok(s.bytes.toString("utf8").startsWith("笑😀這是繁體"));
@@ -50,7 +50,7 @@ export default [
     await p.evaluate(() => { const A = window.__plainpad; A.A.newTab(); A.cmMain.setValue("轉換測試"); A.A.convertTo("big5"); });
     assert.equal(await p.textContent("#stEnc"), "Big5");
     await p.evaluate(() => window.__plainpad.run("hashes")); await p.waitForTimeout(300);
-    assert.match(await p.textContent("#modalText"), /^以 Big5 計算/);
+    assert.match(await p.textContent("#modalText"), /^Computed as Big5/);
     await p.keyboard.press("Escape");
     await p.evaluate(() => window.__plainpad.run("toggleHex")); await p.waitForTimeout(200);
     const hex = await p.evaluate(async () => { const s = window.__plainpad.hx.tab.hex, d = await s.buf.readAsync(0, s.buf.size); return [...d].map(x => x.toString(16).padStart(2, "0")).join(""); });

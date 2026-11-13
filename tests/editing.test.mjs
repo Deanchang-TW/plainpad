@@ -6,7 +6,7 @@ const P = fn => `(${fn})(window.__plainpad)`;   // page.evaluate(P(A => ...)) ru
 export default [
   { name: "page loads with both default tabs and no errors", async fn({ open }){
     const p = await open();
-    assert.deepEqual(await p.evaluate(P(A => A.tabs().map(t => t.name))), ["Plainpad 說明.md", "monthly-orders.sql"]);
+    assert.deepEqual(await p.evaluate(P(A => A.tabs().map(t => t.name))), ["Plainpad Help.md", "monthly-orders.sql"]);
     const tb = await p.locator(".tools .tool").first().boundingBox();
     assert.ok(tb.x < 40, `toolbar starts at the left edge (x=${tb.x})`);
     assert.deepEqual(p.errors, []);
@@ -16,7 +16,7 @@ export default [
     const p = await open();
     assert.equal(await p.evaluate(() => document.documentElement.dataset.icons), "color", "colour icons by default");
     assert.ok(await p.locator(".tools .tool svg .f").count() > 10, "icons carry a fill shape for the colour style");
-    await p.click(".menu-btn:has-text(\"設定\")"); await p.click(".menu-pop .menu-item:has-text(\"單色\")");
+    await p.click(".menu-btn:has-text(\"Settings\")"); await p.click(".menu-pop .menu-item:has-text(\"Monochrome\")");
     assert.equal(await p.evaluate(() => document.documentElement.dataset.icons), "mono");
     await p.waitForTimeout(1000); await p.reload(); await p.waitForSelector("#tabs .tab");
     assert.equal(await p.evaluate(() => document.documentElement.dataset.icons), "mono", "the choice is stored with the other settings");
@@ -51,9 +51,9 @@ export default [
       return { mode: A.cmMain.getMode().name, kw: A.cmMain.getTokenTypeAt({ line:0, ch:1 }), groups: [...sel.querySelectorAll("optgroup")].map(g => g.label).length }; });
     assert.equal(r.mode, "rust"); assert.match(r.kw || "", /keyword/); assert.equal(r.groups, 8, "the status-bar list is grouped");
 
-    /* The 語言 menu shows its groups in columns. */
+    /* The Language menu shows its groups in columns. */
     await p.click("#menubar .menu-btn:nth-child(6)");
-    assert.deepEqual(await p.evaluate(() => { const pop = document.querySelector(".menu-pop"); return [pop.classList.contains("menu-cols"), [...pop.querySelectorAll(".menu-group")].map(g => g.textContent).includes("資料庫")]; }), [true, true]);
+    assert.deepEqual(await p.evaluate(() => { const pop = document.querySelector(".menu-pop"); return [pop.classList.contains("menu-cols"), [...pop.querySelectorAll(".menu-group")].map(g => g.textContent).includes("Databases")]; }), [true, true]);
     await p.keyboard.press("Escape");
     assert.deepEqual(p.errors, []);
   }},
@@ -77,7 +77,7 @@ export default [
     assert.equal(await p.evaluate(P(A => A.cmMain.findMarks({ line:1, ch:0 }, { line:2, ch:0 }).filter(m => m.__isFold).length)), 1, "clicking the box folds the inner block");
     await p.waitForFunction(() => document.querySelector(".CodeMirror-code > div:nth-child(2) .fg.fg-f"));
     assert.ok(await p.evaluate(() => !!document.querySelector(".CodeMirror-foldmarker")), "the folded line shows the placeholder");
-    await p.click(".menu-btn:has-text(\"設定\")"); await p.click(".menu-pop .menu-item:has-text(\"VS Code\")");
+    await p.click(".menu-btn:has-text(\"Settings\")"); await p.click(".menu-pop .menu-item:has-text(\"VS Code\")");
     assert.equal(await p.evaluate(() => document.documentElement.dataset.fold), "chevrons");
   }},
 
@@ -110,7 +110,7 @@ export default [
     const r = await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("l1\nl2\nl3\nl4\nl5"); A.A.newTab(); A.cmMain.setValue("l1\nl2 changed\nl3\nnew\nl5\nl6");
       const t = A.tabs(); A.startCompare(t[t.length - 2]); return { hunks: A.cmp.hunks, info: document.querySelector("#cmpInfo").textContent }; }));
     assert.deepEqual(r.hunks, [{ a0:1, b0:1, ka:1, kb:1 }, { a0:3, b0:3, ka:1, kb:1 }, { a0:5, b0:5, ka:1, kb:0 }], "left is the current tab, which has the extra last line");
-    assert.match(r.info, /第 1 \/ 3 處差異|差異 3 處/);
+    assert.match(r.info, /Difference 1 of 3|3 differences/);
   }},
 
   { name: "list all matches and jump to one", async fn({ open }){
@@ -118,7 +118,7 @@ export default [
     await p.evaluate(P(A => { A.A.newTab(); A.cmMain.setValue("foo bar\nbaz foo foo\nnone"); }));
     await p.keyboard.press(`${MOD}+KeyF`); await p.fill("#findInput", "foo"); await p.click("#btnListCur");
     assert.equal(await p.locator(".res-row").count(), 2);
-    assert.match(await p.textContent("#resTitle"), /3 筆/);
+    assert.match(await p.textContent("#resTitle"), /3 matches/);
     await p.click(".res-row >> nth=1");
     assert.deepEqual(await p.evaluate(P(A => { const c = A.cmMain.getCursor(); return [c.line, c.ch]; })), [1, 7]);
   }},

@@ -66,7 +66,7 @@ export default [
     const p = await open();
     await preview(p, DIAGRAMS, "chart.md");
     await p.waitForFunction(() => document.querySelectorAll("#mdBody .md-mermaid svg").length === 2 && document.querySelector("#mdBody .md-mermaid-err"), null, { timeout: 20000 });
-    assert.match(await p.textContent("#mdBody .md-mermaid-err"), /Mermaid 語法錯誤/);
+    assert.match(await p.textContent("#mdBody .md-mermaid-err"), /Mermaid syntax error/);
     assert.equal(await p.evaluate(() => [...document.body.children].filter(x => /^[di]?ppmm/.test(x.id)).length), 0, "no leftover render nodes");
     await p.evaluate(() => { const A = window.__plainpad; A.run("cycleTheme"); A.run("cycleTheme"); });
     await p.waitForFunction(() => document.querySelectorAll("#mdBody .md-mermaid svg").length === 2, null, { timeout: 20000 });

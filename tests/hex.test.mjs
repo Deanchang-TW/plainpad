@@ -43,9 +43,9 @@ export default [
     const field = name => p.evaluate(n => { const dt = [...document.querySelectorAll("#hexInspBody dt")].find(d => d.textContent.startsWith(n)); return dt && dt.nextSibling.textContent; }, name);
     await p.keyboard.press("Shift+ArrowRight"); await p.keyboard.press("Shift+ArrowRight");
     assert.equal(await field("uint16"), "23117");
-    assert.match(await p.textContent("#stSel"), /選取 2 位元組/);
+    assert.match(await p.textContent("#stSel"), /Sel 2 bytes/);
     await p.keyboard.press("Control+g"); await p.fill("#modalInput", "1050"); await p.keyboard.press("Enter");
-    assert.equal(await field("time_t（32 位元）"), "2023-11-14 22:13:20 UTC");
+    assert.equal(await field("time_t (32-bit)"), "2023-11-14 22:13:20 UTC");
     await p.keyboard.press("Control+g"); await p.fill("#modalInput", "+4"); await p.keyboard.press("Enter");
     assert.equal(await field("double"), "3.14159");
     await p.selectOption("#hxEnc", "utf-8");
@@ -56,9 +56,9 @@ export default [
   { name: "search with wildcards and case-insensitive text", async fn({ open, fixtures }){
     const p = await open(); await openSample(p, fixtures);
     await p.fill("#hxFind", "54 41 ?? 4C 4D"); await p.keyboard.press("Enter"); await p.waitForTimeout(200);
-    assert.equal(await p.textContent("#hxInfo"), "找到：0x48A");
+    assert.equal(await p.textContent("#hxInfo"), "Found at 0x48A");
     await p.click('#hxFindMode button[data-m="text"]'); await p.fill("#hxFind", "tailmark"); await p.keyboard.press("Enter"); await p.waitForTimeout(200);
-    assert.match(await p.textContent("#hxInfo"), /找到：0x48A（已從頭開始）/);
+    assert.match(await p.textContent("#hxInfo"), /Found at 0x48A \(wrapped to the start\)/);
   }},
 
   { name: "clipboard: paste hex, copy as hex and C array, cut", async fn({ open, fixtures }){
@@ -81,13 +81,13 @@ export default [
     await p.mouse.move(a.x + 8, a.y + 8); await p.mouse.down(); await p.mouse.move(c.x + 8, c.y + 8, { steps:5 }); await p.mouse.up();
     assert.equal(await p.locator("#hexRows .hb.s").count(), 7);
     await p.evaluate(() => window.__plainpad.run("sortAsc"));
-    assert.match(await p.textContent("#toast"), /Hex 檢視不支援這個功能/);
+    assert.match(await p.textContent("#toast"), /Hex view doesn't support this/);
   }},
 
   { name: "saving a .bin offers a ZIP whose content is the edited file", async fn({ open, fixtures, saves }){
     const p = await open(); await openSample(p, fixtures);
     await p.keyboard.type("00"); await p.keyboard.press(`${MOD}+s`);
-    assert.match(await p.textContent("#modalTitle"), /無法用原本的副檔名下載/);
+    assert.match(await p.textContent("#modalTitle"), /can't be downloaded with its own extension/);
     await p.click("#modalActions .btn-primary"); await p.waitForTimeout(300);
     const [s] = await saves(p); assert.equal(s.filename, "sample.bin.zip");
     const z = unzipStored(s.bytes); assert.equal(z.name, "sample.bin"); assert.equal(z.data.length, 1170); assert.equal(z.data[0], 0);
@@ -114,8 +114,8 @@ export default [
     assert.match(await p.textContent("#stPos"), /0x20000007/);
     await p.keyboard.press(`${MOD}+Home`); await p.keyboard.type("EE");
     await p.click('#hxFindMode button[data-m="text"]'); await p.fill("#hxFind", "NEEDLE!"); await p.keyboard.press("Enter");
-    await p.waitForFunction(() => /找到|找不到/.test(document.querySelector("#hxInfo").textContent), null, { timeout: 60000 });
-    assert.equal(await p.textContent("#hxInfo"), "找到：0x20000000");
+    await p.waitForFunction(() => /Found|Not found/.test(document.querySelector("#hxInfo").textContent), null, { timeout: 60000 });
+    assert.equal(await p.textContent("#hxInfo"), "Found at 0x20000000");
     await p.mouse.move(500, 400); await p.mouse.wheel(0, -2200); await p.waitForTimeout(200);
     assert.ok(await p.evaluate(() => window.__plainpad.hx.tab.hex.top) > 1000, "wheel moves by rows in a scaled view");
   }}

@@ -34,9 +34,9 @@ function fakeDownloads(){
 const ctxHelpers = {
   base, browser, dist, fixtures: join(root, "tests/fixtures"),
   /* A fresh browser profile (empty storage) with fonts blocked; returns a page with Plainpad loaded. */
-  /* locale: the browser language. Tests check the Traditional Chinese text by default; the interface follows the browser
+  /* locale: the browser language. Tests check the English text by default; the interface follows the browser
      language unless one is chosen in the settings, so pass another locale to see the page in that language. */
-  async open({ path = "/test/index.html", init, downloads = true, clipboard = false, viewport = { width:1360, height:860 }, context, locale = "zh-TW" } = {}){
+  async open({ path = "/test/index.html", init, downloads = true, clipboard = false, viewport = { width:1360, height:860 }, context, locale = "en-US" } = {}){
     const ctx = context || await browser.newContext({ viewport, locale, permissions: clipboard ? ["clipboard-read", "clipboard-write"] : [] });
     if (!context){
       await applyPlatform(ctx);

@@ -65,7 +65,7 @@ export default [
   }},
 
   { name: "the language chosen in Settings sticks across reloads and keeps the tabs", async fn({ open }){
-    const p = await open();
+    const p = await open({ locale: "zh-TW" });   // a browser language other than the one picked below
     await p.evaluate(() => { const A = window.__plainpad; A.A.newTab(); A.cmMain.setValue("keep me"); });
     const openSettings = async label => { await p.locator("#menubar .menu-btn", { hasText: label }).click(); };
     await openSettings("設定");

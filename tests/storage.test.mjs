@@ -48,9 +48,9 @@ export default [
     await p1.evaluate(() => { const A = window.__plainpad; A.A.newTab(); A.cmMain.setValue("primary"); A.persist(); });
     const p2 = await open({ context: p1.ctx });
     assert.equal(await p2.isVisible("#banner"), true);
-    assert.deepEqual(await names(p2), ["新文件（不會保存）"]);
+    assert.deepEqual(await names(p2), ["Untitled (not saved)"]);
     await p2.evaluate(() => { window.__plainpad.cmMain.setValue("second"); window.__plainpad.persist(); });
-    assert.ok(!(await p1.evaluate(() => localStorage.getItem("plainpad.session.v2"))).includes("不會保存"), "second window wrote nothing");
+    assert.ok(!(await p1.evaluate(() => localStorage.getItem("plainpad.session.v2"))).includes("not saved"), "second window wrote nothing");
     await p1.close(); await p2.reload(); await ready(p2);
     assert.equal(await p2.isVisible("#banner"), false);
     assert.equal((await names(p2)).length, 3);

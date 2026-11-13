@@ -17,7 +17,7 @@ export default [
   { name: "inside the macOS app, files open from the bridge and save back to their path without a prompt", async fn({ open }){
     const p = await open({ init: fakeBridge, downloads: false });
     assert.deepEqual(await p.evaluate(() => window.__bridge.map(m => m.type).filter(t => t !== "title" && t !== "watch")), ["ready", "locale"], "the page tells the app when it has booted, and in which language");
-    assert.deepEqual(await p.evaluate(() => window.__bridge.find(m => m.type === "locale")), { type: "locale", lang: "zh-TW", choice: "auto" });
+    assert.deepEqual(await p.evaluate(() => window.__bridge.find(m => m.type === "locale")), { type: "locale", lang: "en", choice: "auto" });
 
     await p.ctx.route("**/__file/*", r => r.fulfill({ body: "hello\n", contentType: "application/octet-stream" }));
     await p.evaluate(() => window.__ppNative.open([{ token: "t1", name: "note.txt", path: "/Users/me/note.txt" }]));
@@ -46,7 +46,7 @@ export default [
     assert.equal((await titles()).pop(), "note.txt|/Users/me/note.txt|false", "the title drops the edited mark after saving");
     assert.equal(await p.evaluate(() => { const t = window.__plainpad.tabs().find(t => t.path === "/Users/me/note.txt"); return t.forceDirty || !t.doc.isClean(t.cleanGen); }), false, "saved tab is clean");
 
-    /* 另存新檔 leaves the path out so the app shows its save panel, and the tab then follows the chosen file. */
+    /* Save As leaves the path out so the app shows its save panel, and the tab then follows the chosen file. */
     await p.evaluate(() => window.__plainpad.run("saveAs"));
     await p.waitForFunction(() => window.__bridge.filter(m => m.type === "save").length === 2);
     saves = (await p.evaluate(() => window.__bridge)).filter(m => m.type === "save");
@@ -60,9 +60,9 @@ export default [
     await p.waitForFunction(() => window.__bridge.filter(m => m.type === "save").length === 3);
     saves = (await p.evaluate(() => window.__bridge)).filter(m => m.type === "save");
     assert.equal(saves[2].path, null);
-    assert.match(saves[2].filename, /^新文件 \d+\.txt$/);
+    assert.match(saves[2].filename, /^Untitled \d+\.txt$/);
 
-    /* 開啟 asks the app for its panel instead of using the hidden <input type="file">. */
+    /* Open asks the app for its panel instead of using the hidden <input type="file">. */
     await p.evaluate(() => window.__plainpad.run("openFile"));
     assert.equal(await p.evaluate(() => window.__bridge.filter(m => m.type === "openPanel").length), 1);
     assert.equal(await p.evaluate(() => window.__ppNative.flush()), true);
@@ -88,20 +88,20 @@ export default [
     await p.waitForFunction(() => window.__plainpad.cmMain.getValue().includes("TWO"));
     assert.deepEqual(await tab(), { text: disk.t2, dirty: false, mtime: 2000 });
     assert.equal((await p.evaluate(() => window.__plainpad.cmMain.getCursor())).line, 2);
-    assert.match(await p.textContent("#toast"), /a\.txt.*已重新載入/);
+    assert.match(await p.textContent("#toast"), /a\.txt.*has been reloaded/);
     assert.deepEqual(await lastWatch(), [{ path: "/w/a.txt", mtime: 2000 }]);
 
     /* Tab with edits: asks. Keeping leaves the edits alone; reloading takes the disk version, and undo gets the edits back. */
     await p.evaluate(() => { const cm = window.__plainpad.cmMain; cm.replaceRange("mine\n", { line: 0, ch: 0 }); });
     await changed({ path: "/w/a.txt", token: "t3", name: "a.txt", mtime: 3000 });
     await p.waitForSelector("#modal:not([hidden])");
-    assert.match(await p.textContent("#modalTitle"), /a\.txt.*已在其他程式中修改/);
-    await p.click('#modalActions button:has-text("保留目前內容")');
+    assert.match(await p.textContent("#modalTitle"), /a\.txt.*was changed by another program/);
+    await p.click('#modalActions button:has-text("Keep My Version")');
     assert.deepEqual(await tab(), { text: "mine\n" + disk.t2, dirty: true, mtime: 3000 });
 
     await changed({ path: "/w/a.txt", token: "t4", name: "a.txt", mtime: 4000 });
     await p.waitForSelector("#modal:not([hidden])");
-    await p.click('#modalActions button:has-text("重新載入")');
+    await p.click('#modalActions button:has-text("Reload")');
     await p.waitForFunction(() => window.__plainpad.cmMain.getValue().includes("five"));
     assert.deepEqual(await tab(), { text: disk.t4, dirty: false, mtime: 4000 });
     await p.evaluate(() => window.__plainpad.cmMain.undo());
@@ -116,7 +116,7 @@ export default [
 
     /* Deleted: the tab stays, marked unsaved. */
     await changed({ path: "/w/a.txt", deleted: true });
-    await p.waitForFunction(() => /刪除或移走/.test(document.querySelector("#toast").textContent));
+    await p.waitForFunction(() => /deleted or moved/.test(document.querySelector("#toast").textContent));
     assert.equal((await tab()).dirty, true);
     assert.deepEqual(p.errors, []);
   }}
