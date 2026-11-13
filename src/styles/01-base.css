@@ -1,5 +1,5 @@
 /* Layout: one-screen editor window — menu row, left-aligned toolbar row, tab strip joined to the paper (one or two panes), docked find panel, docked results panel, status bar.
-   Colours are tokens. The light and dark sets each appear twice: once for the system preference and once for the theme the user picked in the 檢視 menu (data-pad-theme). */
+   Colours are tokens. The light and dark sets each appear twice: once for the system preference and once for the theme the user picked in the View menu (data-pad-theme). */
 :root{
   --chrome:#eef0f3; --chrome-2:#e0e4ea; --chrome-3:#d2d8e0; --paper:#ffffff; --gutter:#f6f7f9;
   --fg:#1b2129; --fg-2:#3b4552; --muted:#6a7580; --line:#d4dae1; --line-soft:#e5e9ee; --accent:#0f8a5f; --accent-2:#34b57d; --accent-ink:#ffffff;

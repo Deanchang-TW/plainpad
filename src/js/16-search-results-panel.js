@@ -19,17 +19,17 @@ function listHits(allTabs){
     const rows = hitsFromText(t.doc.getValue(), re, 20000);
     if (rows.length){ const n = rows.reduce((s, r) => s + r.spans.length, 0); total += n; groups.push({ label: t.path || t.name, count: n, target: { kind:"tab", tab:t }, rows }); }
   }
-  showResults(tr("搜尋「{text}」：{n} 筆", { text:$("#findInput").value, n:fmtNum(total) }) + (allTabs ? tr("，{n} 個分頁", { n:groups.length }) : ""), groups);
+  showResults(tr("Search “{text}”: {n} matches", { text:$("#findInput").value, n:fmtNum(total) }) + (allTabs ? tr(", {n} tabs", { n:groups.length }) : ""), groups);
 }
 function showResults(title, groups){
   lastResults = { title, groups };
   const panel = $("#results"), body = $("#resBody");
   panel.hidden = false; $("#resTitle").textContent = title; body.replaceChildren();
-  if (!groups.length) body.append(el("div", { class:"res-more", text:tr("沒有符合的結果。") }));
+  if (!groups.length) body.append(el("div", { class:"res-more", text:tr("No matches.") }));
   let shown = 0;
   for (const g of groups){
     const det = el("details", { class:"res-group" }); det.open = true;
-    det.append(el("summary", null, g.label + " ", el("span", { class:"cnt", text:tr("（{n} 筆）", { n:fmtNum(g.count) }) })));
+    det.append(el("summary", null, g.label + " ", el("span", { class:"cnt", text:tr(" ({n} matches)", { n:fmtNum(g.count) }) })));
     for (const r of g.rows){
       if (shown >= 3000) break;
       shown++;
@@ -45,23 +45,23 @@ function showResults(title, groups){
       det.append(btn);
     }
     body.append(det);
-    if (shown >= 3000){ body.append(el("div", { class:"res-more", text:tr("結果太多，只顯示前 3,000 行。請把搜尋條件縮小。") })); break; }
+    if (shown >= 3000){ body.append(el("div", { class:"res-more", text:tr("Too many results. Only the first 3,000 lines are shown. Narrow the search.") })); break; }
   }
   cmMain.refresh(); if (!$("#pane2").hidden) cm2.refresh();
 }
 async function jumpToResult(target, line, span){
   let t;
-  if (target.kind === "tab"){ t = target.tab; if (!tabs.includes(t)){ toast(tr("這個分頁已經關閉")); return; } }
+  if (target.kind === "tab"){ t = target.tab; if (!tabs.includes(t)){ toast(tr("This tab has been closed")); return; } }
   else {
     t = tabs.find(x => x.path === target.path);
-    if (!t){ try { t = await openFileObj(target.file, target.path); } catch(e){ t = null; } if (!t){ toast(tr("無法開啟這個檔案")); return; } }
+    if (!t){ try { t = await openFileObj(target.file, target.path); } catch(e){ t = null; } if (!t){ toast(tr("Can't open this file")); return; } }
   }
   activateTab(tabs.indexOf(t));
   const d = t.doc; const from = Pos(line, span[0]), to = Pos(line, span[0] + span[1]);
   focusEditor(); d.setSelection(from, to); cmMain.scrollIntoView({ from, to }, cmMain.getScrollInfo().clientHeight / 3);
 }
 $("#resClose").addEventListener("click", () => { $("#results").hidden = true; cmMain.refresh(); if (!$("#pane2").hidden) cm2.refresh(); focusEditor(); });
-$("#resFold").addEventListener("click", () => { const ds = [...document.querySelectorAll("#resBody details")]; const open = ds.some(d => d.open); ds.forEach(d => d.open = !open); $("#resFold").textContent = open ? tr("全部展開") : tr("全部收合"); });
+$("#resFold").addEventListener("click", () => { const ds = [...document.querySelectorAll("#resBody details")]; const open = ds.some(d => d.open); ds.forEach(d => d.open = !open); $("#resFold").textContent = open ? tr("Expand All") : tr("Collapse All"); });
 (() => { const grip = $("#resGrip"), panel = $("#results"); let y0 = 0, h0 = 0;
   grip.addEventListener("pointerdown", e => { e.preventDefault(); y0 = e.clientY; h0 = panel.offsetHeight; grip.setPointerCapture(e.pointerId); });
   grip.addEventListener("pointermove", e => { if (!grip.hasPointerCapture(e.pointerId)) return; const h = Math.min(window.innerHeight * 0.7, Math.max(80, h0 - (e.clientY - y0))); panel.style.height = h + "px"; });

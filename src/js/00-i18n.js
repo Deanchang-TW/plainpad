@@ -1,9 +1,10 @@
 /* ---------- interface languages ----------
-   Interface text is written in Traditional Chinese and passed through tr(). The Chinese text is the key into
+   Interface text is written in English and passed through tr(). The English text is the key into
    src/i18n/<locale>.json; the build embeds those tables as I18N (and the help page and the sample file as HELP_DOCS
-   and SAMPLE_DOCS), checks that every locale translates every string, and fails on Chinese text outside tr().
-   tr("已儲存 {name}", { name }) fills {name}; a translation may be { one, other } to choose by vars.n.
-   Text in src/markup.html is translated in place below, by the same keys.
+   and SAMPLE_DOCS), checks that zh-TW, zh-CN and vi translate every string, and fails on Chinese text in the code.
+   en.json only holds strings whose English differs from the key: plural forms, and a few short labels.
+   tr("Saved {name}", { name }) fills {name}; a translation may be { one, other } to choose by vars.n.
+   Text in src/markup.html is translated in place below, by the same keys; translate="no" keeps an element's text as is.
    The language is fixed for the life of the page: choosing another one saves the session and reloads.
    Everything here is a function declaration so that 00-config can call tr() while it is still being set up. */
 function uiLocales(){
@@ -35,15 +36,15 @@ function tr(src, vars){
   return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
 }
 function translateDom(root){
-  if (uiLocale() === "zh-TW") return;
-  const cjk = /[\u3400-\u9FFF\uFF00-\uFFEF\u3000-\u303F]/;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => /^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  const text = /\p{L}/u;   // labels such as "16" or "×" are left alone
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => /^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName) || n.parentNode.closest("[translate=no]") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
   for (let n; (n = walker.nextNode()); ){
-    if (!cjk.test(n.nodeValue)) continue;
+    if (!text.test(n.nodeValue)) continue;
     const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(n.nodeValue); n.nodeValue = m[1] + tr(m[2]) + m[3];
   }
+  // Tooltips and labels are translated even on translate="no" elements: the Aa button keeps its text but explains itself.
   for (const el of root.querySelectorAll("[title], [aria-label], [placeholder]"))
-    for (const a of ["title", "aria-label", "placeholder"]){ const v = el.getAttribute(a); if (v && cjk.test(v)) el.setAttribute(a, tr(v)); }
+    for (const a of ["title", "aria-label", "placeholder"]){ const v = el.getAttribute(a); if (v && text.test(v)) el.setAttribute(a, tr(v)); }
 }
 document.documentElement.lang = uiLocales().find(l => l.id === uiLocale()).html;
 translateDom(document.body);

@@ -25,10 +25,10 @@ function loadLib(name, globalName){
   if (window[globalName]) return Promise.resolve(window[globalName]);
   if (!libLoads[name]) libLoads[name] = new Promise((res, rej) => {
     const sc = document.createElement("script"), inline = document.getElementById("pp-lib-" + name);
-    if (inline){ sc.textContent = inline.textContent; document.head.appendChild(sc); window[globalName] ? res(window[globalName]) : rej(new Error(tr("內嵌的 {name} 無法執行", { name }))); return; }
+    if (inline){ sc.textContent = inline.textContent; document.head.appendChild(sc); window[globalName] ? res(window[globalName]) : rej(new Error(tr("The embedded {name} couldn't run", { name }))); return; }
     sc.src = LIB[name]; sc.async = true;
-    sc.onload = () => window[globalName] ? res(window[globalName]) : rej(new Error(tr("載入後找不到 {name}", { name:globalName })));
-    sc.onerror = () => { delete libLoads[name]; rej(new Error(tr("無法下載 {name}，請確認網路連線", { name }))); };
+    sc.onload = () => window[globalName] ? res(window[globalName]) : rej(new Error(tr("{name} was not found after loading", { name:globalName })));
+    sc.onerror = () => { delete libLoads[name]; rej(new Error(tr("Can't download {name}. Check your network connection.", { name }))); };
     document.head.appendChild(sc);
   });
   return libLoads[name];
@@ -76,7 +76,7 @@ function mermaidSvg(code, theme){
   return job;
 }
 function fillMermaid(box, res){
-  if (res.error){ box.classList.add("md-mermaid-err"); box.textContent = tr("Mermaid 語法錯誤：") + "\n" + res.error; }
+  if (res.error){ box.classList.add("md-mermaid-err"); box.textContent = tr("Mermaid syntax error:") + "\n" + res.error; }
   else { box.classList.remove("md-mermaid-err"); box.innerHTML = res.svg; }
 }
 function renderMath(root){
@@ -88,7 +88,7 @@ function renderMath(root){
 function slugify(t){ return t.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, "").replace(/\s+/g, "-") || "section"; }
 /* Renders markdown into a detached element. Each top-level block is wrapped with the source line it starts on, for scroll sync and double-click-to-jump. */
 function buildMd(text, forExport){
-  if (typeof marked === "undefined" || typeof DOMPurify === "undefined"){ const d = document.createElement("div"); d.append(el("p", { class:"md-empty", text:tr("Markdown 元件沒有載入，請重新整理頁面再試一次。") })); return d; }
+  if (typeof marked === "undefined" || typeof DOMPurify === "undefined"){ const d = document.createElement("div"); d.append(el("p", { class:"md-empty", text:tr("The Markdown component didn't load. Reload the page and try again.") })); return d; }
   const tokens = marked.lexer(text);
   let line = 0, html = "";
   for (const tok of tokens){
@@ -108,7 +108,7 @@ function buildMd(text, forExport){
   if (!forExport) host.querySelectorAll("img").forEach(img => {
     const src = img.getAttribute("src") || "";
     if (/^data:image\//i.test(src)) return;
-    const ph = el("span", { class:"md-img", title: src }, tr("圖片：{name}（預覽無法載入外部或相對路徑的圖片，匯出的 HTML 可以）", { name:img.getAttribute("alt") || src || tr("未命名") }));
+    const ph = el("span", { class:"md-img", title: src }, tr("Image: {name} (the preview can't load external or relative images, but exported HTML can)", { name:img.getAttribute("alt") || src || tr("untitled") }));
     img.replaceWith(ph);
   });
   host.querySelectorAll("pre > code.language-mermaid").forEach(code => { const d = el("div", { class:"md-mermaid" }); d.dataset.code = code.textContent.replace(/\n$/, ""); code.parentNode.replaceWith(d); });
@@ -123,21 +123,21 @@ function renderMd(){
   if (!md.open) return;
   const t = mdTab(); if (!t) return; md.tab = t;
   $("#mdName").textContent = "· " + t.name; $("#mdNote").hidden = t.langId === "md" || isHex(t);
-  if (isHex(t)){ $("#mdBody").replaceChildren(el("p", { class:"md-empty", text:tr("Hex 分頁沒有 Markdown 預覽。切回文字檢視後就會顯示。") })); md.blocks = []; return; }
+  if (isHex(t)){ $("#mdBody").replaceChildren(el("p", { class:"md-empty", text:tr("Hex tabs have no Markdown preview. Switch back to text view to see it.") })); md.blocks = []; return; }
   const scroller = $("#mdScroll"), body = $("#mdBody"); const keep = scroller.scrollTop;
   const text = t.doc.getValue();
-  if (!text.trim()){ body.replaceChildren(el("p", { class:"md-empty", text:tr("這個分頁是空的。開始輸入 Markdown，右邊就會即時顯示結果。") })); md.blocks = []; return; }
+  if (!text.trim()){ body.replaceChildren(el("p", { class:"md-empty", text:tr("This tab is empty. Start typing Markdown and the result appears here as you type.") })); md.blocks = []; return; }
   const host = buildMd(text, false);
   const mathReady = renderMath(host);
   const theme = isDarkTheme() ? "dark" : "default"; const pending = [];
   host.querySelectorAll(".md-mermaid").forEach(box => {
     const hit = mm.cache.get(theme + "\n" + box.dataset.code);
-    if (hit) fillMermaid(box, hit); else { box.append(el("div", { class:"md-mermaid-wait", text:tr("圖表繪製中…") })); pending.push(box); }
+    if (hit) fillMermaid(box, hit); else { box.append(el("div", { class:"md-mermaid-wait", text:tr("Drawing diagram…") })); pending.push(box); }
   });
   body.replaceChildren(...host.childNodes);
   const gen = ++md.gen;
-  if (!mathReady) loadLib("katex", "katex").then(() => { if (gen === md.gen) renderMath(body); }, e => toast(tr("數學公式無法顯示：{reason}", { reason:e.message })));
-  pending.forEach(box => mermaidSvg(box.dataset.code, theme).then(res => { if (gen === md.gen && box.isConnected) fillMermaid(box, res); }, e => { if (box.isConnected){ box.classList.add("md-mermaid-err"); box.textContent = tr("無法繪製圖表：{reason}", { reason:e.message }); } }));
+  if (!mathReady) loadLib("katex", "katex").then(() => { if (gen === md.gen) renderMath(body); }, e => toast(tr("Can't show math: {reason}", { reason:e.message })));
+  pending.forEach(box => mermaidSvg(box.dataset.code, theme).then(res => { if (gen === md.gen && box.isConnected) fillMermaid(box, res); }, e => { if (box.isConnected){ box.classList.add("md-mermaid-err"); box.textContent = tr("Can't draw diagram: {reason}", { reason:e.message }); } }));
   md.blocks = [...body.querySelectorAll(":scope > .md-block")].map(b => ({ line: +b.dataset.line, el: b }));
   md.ignoreMd = performance.now() + 120; scroller.scrollTop = keep;
   if (settings.mdSync) mdSyncFromEditor(mdEd(), true);
@@ -182,7 +182,7 @@ $("#mdBody").addEventListener("click", e => {
   const a = e.target.closest("a[href]"); if (!a) return;
   const href = a.getAttribute("href");
   if (href.startsWith("#")){ e.preventDefault(); const t = document.getElementById(decodeURIComponent(href.slice(1))); if (t){ md.ignoreMd = 0; $("#mdScroll").scrollTop = t.offsetTop + $("#mdBody").offsetTop - 8; } return; }
-  if (!/^(https?:|mailto:)/i.test(href)){ e.preventDefault(); toast(tr("預覽無法開啟相對路徑的連結：{href}", { href })); }
+  if (!/^(https?:|mailto:)/i.test(href)){ e.preventDefault(); toast(tr("The preview can't open relative links: {href}", { href })); }
 });
 $("#mdBody").addEventListener("dblclick", e => {
   const b = e.target.closest(".md-block"); if (!b) return;
@@ -215,12 +215,12 @@ async function mdExportHtml(){
   const esc = s => s.replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
   return { title, body: host.innerHTML, doc: `<!doctype html>\n<html lang="zh-Hant">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(title)}</title>\n<style>\n${MD_EXPORT_CSS}\n</style>\n</head>\n<body>\n<article class="md-body">\n${host.innerHTML}\n</article>\n</body>\n</html>\n` };
 }
-$("#mdCopy").addEventListener("click", async () => { const r = await mdExportHtml(); toast((await copyText(r.body)) ? tr("已複製 HTML") : tr("瀏覽器拒絕寫入剪貼簿")); });
+$("#mdCopy").addEventListener("click", async () => { const r = await mdExportHtml(); toast((await copyText(r.body)) ? tr("Copied HTML") : tr("The browser blocked writing to the clipboard")); });
 $("#mdExport").addEventListener("click", async () => {
   const t = md.tab || mdTab(); const r = await mdExportHtml(); const fname = t.name.replace(/\.[^.]+$/, "") + ".html";
   const dl = await getDownloads();
-  if (!dl){ toast((await copyText(r.doc)) ? tr("這個檢視無法下載，已改為複製完整 HTML") : tr("這個檢視無法下載檔案")); return; }
-  try { await dl.save({ filename: fname, data: r.doc }); toast(tr("已匯出 {name}", { name:fname })); }
-  catch(e){ toast(e && e.code === "declined" ? tr("已取消匯出") : tr("無法匯出：{reason}", { reason:(e && e.message) || tr("未知錯誤") })); }
+  if (!dl){ toast((await copyText(r.doc)) ? tr("This view can't download, so the full HTML was copied instead") : tr("This view can't download files")); return; }
+  try { await dl.save({ filename: fname, data: r.doc }); toast(tr("Exported {name}", { name:fname })); }
+  catch(e){ toast(e && e.code === "declined" ? tr("Export canceled") : tr("Can't export: {reason}", { reason:(e && e.message) || tr("unknown error") })); }
 });
 

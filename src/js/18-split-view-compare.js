@@ -12,7 +12,7 @@ function showInPane2(t, force){
 }
 function openSplit(t = cur()){
   if (isHex(t)) t = tabs.find(x => !isHex(x));
-  if (!t){ toast(tr("第二檢視只能顯示文字分頁，目前沒有文字分頁")); return; }
+  if (!t){ toast(tr("The second view shows text tabs only, and none are open")); return; }
   const was = !$("#pane2").hidden;
   $("#pane2").hidden = false; syncHeads();
   showInPane2(t, !was);
@@ -93,16 +93,16 @@ function diffLines(a, b){
   return hunks;
 }
 async function compareDialog(){
-  if (tabs.length < 2){ toast(tr("至少要開兩個分頁才能比較")); return; }
+  if (tabs.length < 2){ toast(tr("Open at least two tabs to compare")); return; }
   const left = cur();
-  if (isHex(left)){ toast(tr("Hex 分頁不支援逐行比較")); return; }
+  if (isHex(left)){ toast(tr("Hex tabs can't be compared line by line")); return; }
   const others = tabs.filter(t => t !== left && !isHex(t));
-  if (!others.length){ toast(tr("沒有其他文字分頁可以比較")); return; }
+  if (!others.length){ toast(tr("There is no other text tab to compare with")); return; }
   const sel = el("select", { id:"cmpTarget", "data-autofocus":"" });
   others.forEach(t => sel.append(el("option", { value:String(tabs.indexOf(t)), text:t.name })));
   const def = split.tab && split.tab !== left ? split.tab : others[others.length - 1];
   sel.value = String(tabs.indexOf(def));
-  const r = await ask({ title:tr("比較「{name}」與…", { name:left.name }), text:tr("左邊是目前分頁，右邊是你選的分頁。綠色是右邊多出的行，紅色是左邊被刪掉的行，黃色是修改過的行；編輯時會自動重新比較。"), body: sel, actions:[{ id:"cancel", label:tr("取消") }, { id:"ok", label:tr("開始比較"), primary:true }] });
+  const r = await ask({ title:tr("Compare “{name}” with…", { name:left.name }), text:tr("The current tab is on the left and the tab you pick is on the right. Green lines were added on the right, red lines were removed from the left, and yellow lines changed. The comparison updates as you edit."), body: sel, actions:[{ id:"cancel", label:tr("Cancel") }, { id:"ok", label:tr("Compare"), primary:true }] });
   if (r !== "ok") return;
   startCompare(tabs[+sel.value]);
 }
@@ -131,7 +131,7 @@ function runCompare(){
   clearCompareMarks();
   const dl = cmp.left.doc, dr = split.linked;
   const hunks = diffLines(dl.getValue("\n").split("\n"), dr.getValue("\n").split("\n"));
-  if (!hunks){ cmp.hunks = []; $("#cmpInfo").textContent = tr("差異太多，無法逐行比較"); return; }
+  if (!hunks){ cmp.hunks = []; $("#cmpInfo").textContent = tr("Too many differences to compare line by line"); return; }
   cmp.hunks = hunks;
   const lineCls = (doc, line, cls) => { const h = doc.addLineClass(line, "background", cls); cmp.undo.push(() => doc.removeLineClass(h, "background", cls)); };
   const pad = (ed, after, n) => {
@@ -149,11 +149,11 @@ function runCompare(){
       if (h.kb < h.ka) pad(cm2, h.kb ? h.b0 + h.kb - 1 : h.b0 - 1, h.ka - h.kb);
     }
   }));
-  $("#cmpInfo").textContent = hunks.length ? tr("差異 {n} 處（修改 {chg}、刪除 {del}、新增 {add} 行）", { n:hunks.length, chg, del, add }) : tr("兩份內容完全相同");
+  $("#cmpInfo").textContent = hunks.length ? tr("{n} differences ({chg} changed, {del} deleted, {add} added lines)", { n:hunks.length, chg, del, add }) : tr("The two are identical");
   syncScrollFrom(cm === cm2 ? cm2 : cmMain);
 }
 function cmpJump(dir){
-  if (!cmp.on || !cmp.hunks.length){ toast(tr("沒有差異")); return; }
+  if (!cmp.on || !cmp.hunks.length){ toast(tr("No differences")); return; }
   const line = cmMain.getCursor().line; const H = cmp.hunks;
   let i;
   if (dir > 0){ i = H.findIndex(h => h.a0 > line); if (i < 0) i = 0; }
@@ -164,7 +164,7 @@ function cmpJump(dir){
   const top = cmMain.heightAtLine(la, "local") - cmMain.getScrollInfo().clientHeight / 3;
   cmMain.scrollTo(null, Math.max(0, top));
   if (!split.sync){ const top2 = cm2.heightAtLine(lb, "local") - cm2.getScrollInfo().clientHeight / 3; cm2.scrollTo(null, Math.max(0, top2)); }
-  $("#cmpInfo").textContent = tr("第 {i} / {n} 處差異", { i:i + 1, n:H.length });
+  $("#cmpInfo").textContent = tr("Difference {i} of {n}", { i:i + 1, n:H.length });
 }
 $("#cmpPrev").addEventListener("click", () => cmpJump(-1));
 $("#cmpNext").addEventListener("click", () => cmpJump(1));

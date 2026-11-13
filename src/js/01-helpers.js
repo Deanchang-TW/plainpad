@@ -9,7 +9,7 @@ function langForName(name){
 }
 function eolStats(t){ const crlf = (t.match(/\r\n/g) || []).length, cr = (t.match(/\r(?!\n)/g) || []).length, lf = (t.match(/(?<!\r)\n/g) || []).length; return { CRLF:crlf, CR:cr, LF:lf }; }
 function detectEol(t){ const n = eolStats(t); return n.CRLF >= n.LF && n.CRLF >= n.CR && n.CRLF ? "CRLF" : n.CR > n.LF ? "CR" : "LF"; }
-function mixedEolNote(t){ const n = eolStats(t), kinds = Object.entries(n).filter(([, v]) => v); if (kinds.length < 2) return ""; return kinds.map(([k, v]) => tr("{eol} {n} 行", { eol:k, n:fmtNum(v) })).join(tr("、")); }
+function mixedEolNote(t){ const n = eolStats(t), kinds = Object.entries(n).filter(([, v]) => v); if (kinds.length < 2) return ""; return kinds.map(([k, v]) => tr("{eol} {n} lines", { eol:k, n:fmtNum(v) })).join(tr(", ")); }
 function escapeRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 function unescapeExt(s){
   return s.replace(/\\(n|r|t|0|\\|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/g, (a, c) => {

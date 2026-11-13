@@ -50,49 +50,57 @@ async function vendorFiles(){
 const listDir = d => readdirSync(new URL(d, root)).sort();
 
 /* ---------- interface languages (see src/js/00-i18n.js) ---------- */
-export const LOCALES = ["zh-TW", "en", "zh-CN", "vi"];   // zh-TW is the source text; the others have src/i18n/<locale>.json
-const CJK = /[\u3400-\u9fff\uff00-\uffef\u3000-\u303f]/;
+export const LOCALES = ["zh-TW", "en", "zh-CN", "vi"];   // the keys are English; each locale has src/i18n/<locale>.json
+const TRANSLATED = ["zh-TW", "zh-CN", "vi"];               // must translate every key; en.json only overrides
+const CJK = /[㐀-鿿＀-￯　-〿]/;
+const LETTER = /\p{L}/u;
 const MARKUP_ATTRS = /\s(title|aria-label|placeholder)="([^"]*)"/g;
 
-/* Every string the interface shows, with where it comes from. Strings passed to tr("…") in src/js, and the text and
-   title / aria-label / placeholder attributes of src/markup.html. Chinese anywhere else in a string, template or
-   regular expression is reported as a problem, unless its line says i18n-ignore. */
+/* Every string the interface shows, with where it comes from: strings passed to tr("…") in src/js, and in
+   src/markup.html the text (unless its element says translate="no") and title / aria-label / placeholder attributes
+   that contain a letter. Chinese in a string, template or regular expression of src/js is reported as a problem,
+   unless its line says i18n-ignore: interface text is written in English and translated through the tables. */
 export function i18nKeys(){
   const keys = new Map(), problems = [];
-  const add = (k, where) => { if (!keys.has(k)) keys.set(k, where); };
+  const add = (k, where) => {
+    if (CJK.test(k)) problems.push(`${where}: ${JSON.stringify(k.slice(0, 50))} is Chinese; write interface text in English and translate it in src/i18n/zh-TW.json`);
+    else if (!keys.has(k)) keys.set(k, where);
+  };
   for (const f of listDir("src/js/").filter(f => f.endsWith(".js"))){
     const code = read("src/js/" + f), lines = code.split("\n");
     const toks = [...tokenizer(code, { ecmaVersion: "latest", locations: true })];
     toks.forEach((k, i) => {
       const type = k.type.label, value = type === "regexp" ? k.value.pattern : k.value;
-      // Judge by the source as written: an escape such as \u3000 is not text a translator needs to see.
-      if (!["string", "template", "regexp"].includes(type) || typeof value !== "string" || !CJK.test(code.slice(k.start, k.end))) return;
+      if (!["string", "template", "regexp"].includes(type) || typeof value !== "string") return;
       const line = k.loc.start.line, prev = toks[i - 1], fn = toks[i - 2], before = toks[i - 3];
       const isTr = type === "string" && prev && prev.type.label === "(" && fn && fn.type.label === "name" && fn.value === "tr" && !(before && before.type.label === ".");
       if (isTr) add(value, `src/js/${f}:${line}`);
-      else if (!/i18n-ignore/.test(lines[line - 1])) problems.push(`src/js/${f}:${line}: ${JSON.stringify(value.slice(0, 50))} is not passed to tr()`);
+      // Judge by the source as written: an escape such as 　 is not text anyone reads.
+      else if (CJK.test(code.slice(k.start, k.end)) && !/i18n-ignore/.test(lines[line - 1])) problems.push(`src/js/${f}:${line}: ${JSON.stringify(value.slice(0, 50))} is Chinese; write interface text in English inside tr()`);
     });
   }
   const markup = read("src/markup.html");
-  for (const m of markup.matchAll(/>([^<]+)</g)){ const v = m[1].trim(); if (CJK.test(v)) add(v, "src/markup.html"); }
-  for (const m of markup.matchAll(MARKUP_ATTRS)) if (CJK.test(m[2])) add(m[2], "src/markup.html");
+  for (const m of markup.matchAll(/>([^<]+)</g)){
+    const v = m[1].trim(), tag = markup.slice(markup.lastIndexOf("<", m.index), m.index + 1);
+    if (LETTER.test(v) && !(tag[1] !== "/" && /\stranslate="no"/.test(tag))) add(v, "src/markup.html");
+  }
+  for (const m of markup.matchAll(MARKUP_ATTRS)) if (LETTER.test(m[2])) add(m[2], "src/markup.html");
   return { keys, problems };
 }
 const placeholders = s => [...String(s).matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort().join(",");
 export function i18nData(){
   const { keys, problems } = i18nKeys();
-  const tables = { "zh-TW": {} }, help = {}, sample = {};
+  const tables = {}, help = {}, sample = {};
   for (const l of LOCALES){
     help[l] = read(`src/i18n/help/${l}.md`); sample[l] = read(`src/i18n/sample/${l}.sql`);
-    if (l === "zh-TW") continue;
     const table = tables[l] = JSON.parse(read(`src/i18n/${l}.json`));
-    for (const k of keys.keys()){
-      if (!(k in table)){ problems.push(`src/i18n/${l}.json: no translation for ${JSON.stringify(k)} (${keys.get(k)})`); continue; }
-      const v = table[k], forms = v && typeof v === "object" ? [v.one, v.other].filter(x => x != null) : [v];
+    if (TRANSLATED.includes(l)) for (const k of keys.keys()) if (!(k in table)) problems.push(`src/i18n/${l}.json: no translation for ${JSON.stringify(k)} (${keys.get(k)})`);
+    for (const [k, v] of Object.entries(table)){
+      if (!keys.has(k)){ problems.push(`src/i18n/${l}.json: ${JSON.stringify(k)} is no longer used`); continue; }
+      const forms = v && typeof v === "object" ? [v.one, v.other].filter(x => x != null) : [v];
       if (!forms.length || forms.some(x => typeof x !== "string" || !x)) problems.push(`src/i18n/${l}.json: empty translation for ${JSON.stringify(k)}`);
       else if (forms.some(x => placeholders(x) !== placeholders(k))) problems.push(`src/i18n/${l}.json: ${JSON.stringify(k)} must keep the placeholders {${placeholders(k)}}`);
     }
-    for (const k of Object.keys(table)) if (!keys.has(k)) problems.push(`src/i18n/${l}.json: ${JSON.stringify(k)} is no longer used`);
   }
   if (problems.length) throw new Error("Interface text needs attention (" + problems.length + "):\n  " + problems.slice(0, 40).join("\n  ") + (problems.length > 40 ? "\n  …" : "") + "\nnode build.mjs --i18n-todo lists every missing translation as JSON to fill in.");
   return { tables, help, sample };
@@ -142,7 +150,7 @@ function checkVendorRefs(html, files){
 /* node build.mjs --i18n-todo: every key a locale lacks, as JSON ready to translate and merge into its file. */
 function i18nTodo(){
   const { keys } = i18nKeys(), out = {};
-  for (const l of LOCALES.slice(1)){
+  for (const l of TRANSLATED){
     let table = {}; try { table = JSON.parse(read(`src/i18n/${l}.json`)); } catch(e){}
     out[l] = Object.fromEntries([...keys.keys()].filter(k => !(k in table)).map(k => [k, ""]));
   }

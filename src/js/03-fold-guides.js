@@ -1,7 +1,7 @@
 
 /* ---------- fold guides ----------
    The fold gutter, drawn the Notepad++ way: a ⊟ box on the first line of a foldable block, a line down its body and a └ on
-   its last line; ⊞ once folded. Clicking a box folds or unfolds that block. The VS Code style (設定 › 摺疊標記) uses the
+   its last line; ⊞ once folded. Clicking a box folds or unfolds that block. The VS Code style (Settings › Fold Markers) uses the
    same markers but shows only chevrons, and only while the pointer is over the gutter. Fold ranges come from the mode's
    fold helper (braces, tags, indentation or headings), the same source foldCode uses. */
 const FG_LOOKBACK = 400;   // blocks that start this many lines above the viewport still get their guide drawn
@@ -23,7 +23,7 @@ function fgRange(cm, line){
   if (!r){ const m = /\S/.exec(cm.getLine(line)); if (m) r = auto(cm, Pos(line, m.index + 1)); }
   return r && r.to.line > r.from.line ? r : null;
 }
-/* 檢視 › 全部摺疊. CodeMirror's own foldAll asks each line at column 0 only, which misses JSX tags; this one uses fgRange. */
+/* View › Fold All. CodeMirror's own foldAll asks each line at column 0 only, which misses JSX tags; this one uses fgRange. */
 function foldAllBlocks(cm){
   cm.operation(() => { for (let l = cm.firstLine(), last = cm.lastLine(); l <= last; l++){ const r = fgRange(cm, l); if (r) cm.foldCode(Pos(l, 0), { rangeFinder: () => r }, "fold"); } });
 }

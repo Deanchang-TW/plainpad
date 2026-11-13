@@ -26,11 +26,11 @@ function setSetting(k, v){ settings[k] = v; applySettings(); persistSoon(); }
    Tabs, cursors and unsaved edits are all in the session, so nothing is lost. */
 function setUiLang(k){
   if ((settings.uiLang || "auto") === k) return;
-  if (!session.primary){ toast(tr("另一個視窗正在使用工作階段，請在那個視窗切換語言")); return; }
+  if (!session.primary){ toast(tr("Another window holds the session. Change the language in that window.")); return; }
   settings.uiLang = k;
   Promise.resolve(persist()).then(() => location.reload());   // reload only once the tab contents are written
 }
-const THEME_LABEL = { system:tr("跟隨系統"), light:tr("淺色"), dark:tr("深色") };
-const ICON_LABEL = { color:tr("彩色"), mono:tr("單色") };
-const FOLD_LABEL = { guides:tr("指引線（Notepad++ 樣式）"), chevrons:tr("箭頭（VS Code 樣式）") };
+const THEME_LABEL = { system:tr("Match system"), light:tr("Light"), dark:tr("Dark") };
+const ICON_LABEL = { color:tr("Color"), mono:tr("Monochrome") };
+const FOLD_LABEL = { guides:tr("Guide lines (Notepad++ style)"), chevrons:tr("Chevrons (VS Code style)") };
 

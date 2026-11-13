@@ -23,7 +23,7 @@ async function nativeOpen(items){
       if (!res.ok) throw new Error(res.status);
       const t = await openFileObj(new File([await res.blob()], it.name), it.path);
       if (t){ t.mtime = it.mtime; opened++; }
-    } catch(e){ toast(tr("無法讀取「{name}」", { name:it.name })); }
+    } catch(e){ toast(tr("Can't read “{name}”", { name:it.name })); }
   }
   nativeWatch();
   if (opened) focusEditor();
@@ -60,7 +60,7 @@ async function nativeApplyChange(it){
   let t = tabs.find(x => x.path === it.path); if (!t) return;
   if (it.deleted){
     if (!t.forceDirty){ t.forceDirty = true; renderTabs(); persistSoon(); }
-    toast(tr("「{name}」已在其他程式中刪除或移走。分頁內容還在，儲存時會重新建立這個檔案", { name:t.name }));
+    toast(tr("“{name}” was deleted or moved by another program. The tab keeps its content, and saving recreates the file.", { name:t.name }));
     return;
   }
   const res = await fetch("__file/" + encodeURIComponent(it.token)); if (!res.ok) return;
@@ -69,10 +69,10 @@ async function nativeApplyChange(it){
   if (isDirty(t)){
     activateTab(tabs.indexOf(t));
     const hex = isHex(t);
-    const r = await ask({ title:tr("「{name}」已在其他程式中修改", { name:t.name }),
-      text: hex ? tr("這個分頁也有還沒儲存的修改。重新載入會改用磁碟上的版本，目前的修改會被捨棄。")
-                : tr("這個分頁也有還沒儲存的修改。重新載入會改用磁碟上的版本，之後可以用「復原」找回目前的內容。"),
-      actions:[{ id:"keep", label:tr("保留目前內容"), primary:hex }, { id:"reload", label:tr("重新載入"), primary:!hex }] });
+    const r = await ask({ title:tr("“{name}” was changed by another program", { name:t.name }),
+      text: hex ? tr("This tab also has unsaved changes. Reloading uses the version on disk and discards your changes.")
+                : tr("This tab also has unsaved changes. Reloading uses the version on disk. You can get your current text back with Undo."),
+      actions:[{ id:"keep", label:tr("Keep My Version"), primary:hex }, { id:"reload", label:tr("Reload"), primary:!hex }] });
     if (r !== "reload" || !tabs.includes(t)) return;
   }
   if (isHex(t)){
@@ -82,10 +82,10 @@ async function nativeApplyChange(it){
     if (i === active) activateTab(i, true);
     renderTabs(); persistSoon();
   } else {
-    if (blob.size > 25 * 1024 * 1024){ toast(tr("「{name}」在其他程式中變得超過 25 MB，請關閉分頁後重新開啟，會改用 Hex 檢視", { name:t.name })); return; }
+    if (blob.size > 25 * 1024 * 1024){ toast(tr("“{name}” grew past 25 MB in another program. Close the tab and open the file again to view it in Hex.", { name:t.name })); return; }
     reloadTextTab(t, await blob.arrayBuffer());
   }
-  if (!isDirty(t) || isHex(t)) toast(tr("「{name}」在其他程式中修改過，已重新載入", { name:t.name }));
+  if (!isDirty(t) || isHex(t)) toast(tr("“{name}” was changed by another program and has been reloaded", { name:t.name }));
 }
 /* Replaces only the part of the text that changed, as one undoable step, so the cursor, scroll position, bookmarks and
    folds outside the changed part stay where they were. Keeps the tab's encoding unless it is UTF-8, which re-detects. */

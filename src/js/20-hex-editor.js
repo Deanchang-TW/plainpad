@@ -80,7 +80,7 @@ function makeHexTab({ name, blob, path = null, id = null, dirty = false }){
 function openHexFile(f, path, note){
   const t = makeHexTab({ name:f.name, blob:f, path });
   addTab(t);
-  toast(tr("「{name}」{note}", { name:f.name, note:note || tr("以 Hex 檢視開啟") }) + (f.size > HEX_PERSIST_MAX ? tr("。超過 200 MB，重新整理頁面後不會保留") : ""));
+  toast(tr("“{name}” {note}", { name:f.name, note:note || tr("opened in Hex view") }) + (f.size > HEX_PERSIST_MAX ? tr(". It is over 200 MB, so it won't be kept after a reload") : ""));
   return t;
 }
 $("#hexFileInput").addEventListener("change", e => { for (const f of [...e.target.files]) openHexFile(f); focusEditor(); });
@@ -89,7 +89,7 @@ function hexRestoreTab(o){
   Promise.all([idbGet(o.id), idbGet("base:" + o.id)]).then(([rec, base]) => {
     const s = t.hex; s.loading = false;
     const blob = (base && base.blob) || (rec && rec.blob);
-    if (!blob){ s.clean = s.buf.pieces; const i = tabs.indexOf(t); if (i >= 0){ toast(tr("「{name}」的 Hex 內容沒有保存下來，已關閉這個分頁", { name:t.name })); closeTab(i); } return; }
+    if (!blob){ s.clean = s.buf.pieces; const i = tabs.indexOf(t); if (i >= 0){ toast(tr("The Hex content of “{name}” was not saved, so the tab was closed", { name:t.name })); closeTab(i); } return; }
     const b = new HexBuf(blob);
     if (rec && rec.pieces){ const add = rec.add || new Uint8Array(0); b.add = new Uint8Array(Math.max(4096, add.length)); b.add.set(add); b.addLen = add.length; b.setPieces(rec.pieces); }
     s.buf = b; s.savedBase = base && base.blob ? blob : null; s.clean = o.dirty ? null : b.pieces; s.savedVersion = s.version; s.cur = s.anchor = Math.min(o.cur || 0, b.size);
@@ -220,14 +220,14 @@ function hexRender(){
 function hexRenderSoon(){ if (hx.raf) return; hx.raf = requestAnimationFrame(() => { hx.raf = 0; hexRender(); hexInspect(); }); }
 function hexRefresh(){
   const t = hx.tab; if (!t) return; hexLayout(); hexRender(); hexInspect(); updateStatus();
-  const b = $("#hxIns"); b.textContent = t.hex.ins ? tr("插入") : tr("覆寫"); b.setAttribute("aria-pressed", String(t.hex.ins));
+  const b = $("#hxIns"); b.textContent = t.hex.ins ? tr("Insert") : tr("Overwrite"); b.setAttribute("aria-pressed", String(t.hex.ins));
 }
 function hexStatus(){
   const t = hx.tab || cur(); const s = t.hex, sel = hexSel(s);
-  $("#stLen").textContent = tr("大小 {n} 位元組", { n:fmtNum(s.buf.size) });
-  $("#stLines").textContent = tr("Hex 檢視");
-  $("#stPos").textContent = tr("位址 {hex}（{n}）", { hex:"0x" + s.cur.toString(16).toUpperCase(), n:fmtNum(s.cur) });
-  $("#stSel").textContent = sel ? tr("選取 {n} 位元組", { n:fmtNum(sel[1] - sel[0]) }) : tr("選取 0");
+  $("#stLen").textContent = tr("Size {n} bytes", { n:fmtNum(s.buf.size) });
+  $("#stLines").textContent = tr("Hex view");
+  $("#stPos").textContent = tr("Offset {hex} ({n})", { hex:"0x" + s.cur.toString(16).toUpperCase(), n:fmtNum(s.cur) });
+  $("#stSel").textContent = sel ? tr("Sel {n} bytes", { n:fmtNum(sel[1] - sel[0]) }) : tr("Sel 0");
   $("#stEol").hidden = $("#stEnc").hidden = $("#stLang").hidden = true;
   $("#stIns").textContent = s.ins ? "INS" : "OVR";
 }
@@ -240,7 +240,7 @@ function hexChanged(){
 function hexMoved(){ const t = hx.tab; if (!t) return; t.hex.lastEdit = null; hexEnsureVisible(t.hex.cur); hexRender(); hexInspect(); updateStatus(); }
 
 /* --- data inspector --- */
-function fmtTime(ms){ return Number.isFinite(ms) && ms >= 0 && ms <= 4102444800000 ? new Date(ms).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC") : tr("超出合理範圍"); }
+function fmtTime(ms){ return Number.isFinite(ms) && ms >= 0 && ms <= 4102444800000 ? new Date(ms).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC") : tr("out of range"); }
 function fmtFloat(x){ return Number.isFinite(x) ? String(Number(x.toPrecision(9))) : String(x); }
 function hexInspect(){
   const t = hx.tab; if (!t || !settings.hexInsp || $("#hexInsp").hidden) return; const s = t.hex, buf = s.buf, sel = hexSel(s), pos = sel ? sel[0] : s.cur, le = settings.hexLE;
@@ -249,18 +249,18 @@ function hexInspect(){
   const v = (need, f) => n >= need ? String(f()) : "—";
   const u8 = n ? utf8At(b, 0) : null, b5 = n >= 2 && b[0] >= 0x81 ? big5Char(b[0], b[1]) : null;
   const rows = [
-    [tr("位址"), tr("{a}（{b}）", { a:"0x" + pos.toString(16).toUpperCase(), b:fmtNum(pos) })],
-    ...(sel ? [[tr("選取長度"), tr("{a}（{b}）", { a:fmtNum(sel[1] - sel[0]), b:"0x" + (sel[1] - sel[0]).toString(16).toUpperCase() })]] : []),
-    [tr("二進位"), v(1, () => b[0].toString(2).padStart(8, "0").replace(/^(\d{4})/, "$1 "))],
+    [tr("Offset"), tr("{a} ({b})", { a:"0x" + pos.toString(16).toUpperCase(), b:fmtNum(pos) })],
+    ...(sel ? [[tr("Selection length"), tr("{a} ({b})", { a:fmtNum(sel[1] - sel[0]), b:"0x" + (sel[1] - sel[0]).toString(16).toUpperCase() })]] : []),
+    [tr("Binary"), v(1, () => b[0].toString(2).padStart(8, "0").replace(/^(\d{4})/, "$1 "))],
     ["int8", v(1, () => dv.getInt8(0))], ["uint8", v(1, () => b[0])],
     ["int16", v(2, () => dv.getInt16(0, le))], ["uint16", v(2, () => dv.getUint16(0, le))],
     ["int32", v(4, () => dv.getInt32(0, le))], ["uint32", v(4, () => dv.getUint32(0, le))],
     ["int64", v(8, () => dv.getBigInt64(0, le))], ["uint64", v(8, () => dv.getBigUint64(0, le))],
-    [tr("float（32 位元）"), v(4, () => fmtFloat(dv.getFloat32(0, le)))], [tr("double（64 位元）"), v(8, () => fmtFloat(dv.getFloat64(0, le)))],
-    [tr("time_t（32 位元）"), v(4, () => fmtTime(dv.getUint32(0, le) * 1000))],
+    [tr("float (32-bit)"), v(4, () => fmtFloat(dv.getFloat32(0, le)))], [tr("double (64-bit)"), v(8, () => fmtFloat(dv.getFloat64(0, le)))],
+    [tr("time_t (32-bit)"), v(4, () => fmtTime(dv.getUint32(0, le) * 1000))],
     ["FILETIME", v(8, () => fmtTime(Number(dv.getBigUint64(0, le) / 10000n) - 11644473600000))],
-    [tr("UTF-8 字元"), u8 ? `${String.fromCodePoint(u8.cp)}\u3000U+${u8.cp.toString(16).toUpperCase().padStart(4, "0")}` : n && b[0] >= 0x20 && b[0] < 0x7F ? `${String.fromCharCode(b[0])}\u3000U+00${HEXB[b[0]]}` : "—"],
-    [tr("Big5 字元"), b5 || "—"]
+    [tr("UTF-8 character"), u8 ? `${String.fromCodePoint(u8.cp)}\u3000U+${u8.cp.toString(16).toUpperCase().padStart(4, "0")}` : n && b[0] >= 0x20 && b[0] < 0x7F ? `${String.fromCharCode(b[0])}\u3000U+00${HEXB[b[0]]}` : "—"],
+    [tr("Big5 character"), b5 || "—"]
   ];
   const dl = $("#hexInspBody"); dl.replaceChildren();
   rows.forEach(([k, val]) => dl.append(el("dt", { text:k }), el("dd", { text:val })));
@@ -273,9 +273,9 @@ function hexEdit(pos, del, bytes, kind){
   if (!merge){ s.undo.push({ p:s.buf.pieces, cur:s.cur, anchor:s.anchor }); if (s.undo.length > 1000) s.undo.shift(); }
   s.redo = []; s.buf.replace(pos, del, bytes); s.version++; s.lastEdit = kind;
 }
-function hexUndo(){ const t = hx.tab; if (!t) return; const s = t.hex, u = s.undo.pop(); if (!u){ toast(tr("沒有可以復原的動作")); return; }
+function hexUndo(){ const t = hx.tab; if (!t) return; const s = t.hex, u = s.undo.pop(); if (!u){ toast(tr("Nothing to undo")); return; }
   s.redo.push({ p:s.buf.pieces, cur:s.cur, anchor:s.anchor }); s.buf.setPieces(u.p); s.cur = u.cur; s.anchor = u.anchor; s.nib = 0; s.version++; s.lastEdit = null; hexChanged(); }
-function hexRedo(){ const t = hx.tab; if (!t) return; const s = t.hex, u = s.redo.pop(); if (!u){ toast(tr("沒有可以重做的動作")); return; }
+function hexRedo(){ const t = hx.tab; if (!t) return; const s = t.hex, u = s.redo.pop(); if (!u){ toast(tr("Nothing to redo")); return; }
   s.undo.push({ p:s.buf.pieces, cur:s.cur, anchor:s.anchor }); s.buf.setPieces(u.p); s.cur = u.cur; s.anchor = u.anchor; s.nib = 0; s.version++; s.lastEdit = null; hexChanged(); }
 function hexTypeHex(v){
   const s = hx.tab.hex, buf = s.buf, sel = hexSel(s);
@@ -294,7 +294,7 @@ function hexEncodeText(str, silent){
   const out = new Uint8Array(str.length);
   for (let i = 0; i < str.length; i++){
     const c = str.charCodeAt(i); let b = c < 0x80 ? c : enc === "windows-1252" ? W1252.indexOf(str[i]) : -1;
-    if (b < 0){ if (!silent) toast(enc === "big5" ? tr("Big5 模式只能直接輸入英數字元。中文請在 Hex 欄輸入，或把文字欄編碼改成 UTF-8") : tr("這個字元無法用目前的文字欄編碼表示，請改用 UTF-8")); return null; }
+    if (b < 0){ if (!silent) toast(enc === "big5" ? tr("In Big5 mode only letters and digits can be typed directly. Type Chinese in the Hex column, or switch the text column to UTF-8.") : tr("This character can't be represented in the text column's encoding. Switch to UTF-8.")); return null; }
     out[i] = b;
   }
   return out;
@@ -321,27 +321,27 @@ function hexParseHex(txt){
 }
 function hexPaste(txt){
   if (!txt) return; const s = hx.tab.hex; let bytes;
-  if (s.col === "hex"){ bytes = hexParseHex(txt); if (!bytes){ toast(tr("剪貼簿內容不是 hex 字串（例如 4D 5A 90 00）。要貼上文字請先按 Tab 切到右邊的文字欄")); return; } }
+  if (s.col === "hex"){ bytes = hexParseHex(txt); if (!bytes){ toast(tr("The clipboard doesn't hold a hex string (such as 4D 5A 90 00). To paste text, press Tab to move to the text column first.")); return; } }
   else { bytes = hexEncodeText(txt); if (!bytes) return; }
-  hexPutBytes(bytes, "paste"); toast(tr("已貼上 {n} 位元組", { n:fmtNum(bytes.length) }));
+  hexPutBytes(bytes, "paste"); toast(tr("Pasted {n} bytes", { n:fmtNum(bytes.length) }));
 }
 function hexDecodeText(d){ try { return new TextDecoder(settings.hexEnc === "ascii" ? "windows-1252" : settings.hexEnc).decode(d); } catch(e){ return new TextDecoder().decode(d); } }
 function hexClipText(){
-  const s = hx.tab.hex, sel = hexSel(s); if (!sel){ toast(tr("先選取要複製的範圍（Shift + 方向鍵，或用滑鼠拖曳）")); return null; }
+  const s = hx.tab.hex, sel = hexSel(s); if (!sel){ toast(tr("Select a range to copy first (Shift + arrow keys, or drag with the mouse)")); return null; }
   const len = sel[1] - sel[0]; const R = len <= 4 << 20 ? s.buf.readSync(sel[0], len) : null;
-  if (!R || !R.ok){ toast(tr("選取範圍太大，請改用「Hex」選單裡的「複製選取範圍為」")); return null; }
+  if (!R || !R.ok){ toast(tr("The selection is too large. Use Hex > Copy Selection As instead.")); return null; }
   return s.col === "hex" ? Array.from(R.data, b => HEXB[b]).join(" ") : hexDecodeText(R.data);
 }
 async function hexCopyAs(kind){
-  const t = hx.tab; if (!t) return; const s = t.hex, sel = hexSel(s); if (!sel){ toast(tr("先選取要複製的範圍（Shift + 方向鍵，或用滑鼠拖曳）")); return; }
-  const len = sel[1] - sel[0]; if (len > 8 << 20){ toast(tr("選取範圍超過 8 MB，無法複製到剪貼簿")); return; }
+  const t = hx.tab; if (!t) return; const s = t.hex, sel = hexSel(s); if (!sel){ toast(tr("Select a range to copy first (Shift + arrow keys, or drag with the mouse)")); return; }
+  const len = sel[1] - sel[0]; if (len > 8 << 20){ toast(tr("The selection is over 8 MB and can't be copied to the clipboard")); return; }
   const d = await s.buf.readAsync(sel[0], len); let out;
   if (kind === "hex") out = Array.from(d, b => HEXB[b]).join(" ");
   else if (kind === "c" || kind === "cs"){ const lines = []; for (let i = 0; i < d.length; i += 16) lines.push("    " + Array.from(d.subarray(i, i + 16), b => "0x" + HEXB[b]).join(", "));
     out = (kind === "c" ? `unsigned char data[${len}] = {\n` : `byte[] data = new byte[] {\n`) + lines.join(",\n") + "\n};"; }
   else if (kind === "b64"){ let bin = ""; for (let i = 0; i < d.length; i += 0x8000) bin += String.fromCharCode.apply(null, d.subarray(i, i + 0x8000)); out = btoa(bin); }
   else out = hexDecodeText(d);
-  toast((await copyText(out)) ? tr("已複製 {n} 位元組", { n:fmtNum(len) }) : tr("瀏覽器拒絕寫入剪貼簿"));
+  toast((await copyText(out)) ? tr("Copied {n} bytes", { n:fmtNum(len) }) : tr("The browser blocked writing to the clipboard"));
 }
 function hexSelectAll(){ const t = hx.tab; if (!t) return; t.hex.anchor = 0; t.hex.cur = t.hex.buf.size; t.hex.nib = 0; hexMovedNoScroll(); }
 function hexMovedNoScroll(){ const t = hx.tab; t.hex.lastEdit = null; hexRender(); hexInspect(); updateStatus(); }
@@ -357,15 +357,15 @@ function parseOffset(str, base){
 }
 async function hexGoto(){
   const t = hx.tab; if (!t) return; const s = t.hex;
-  const v = await promptText({ title:tr("跳至位址"), text:tr("檔案大小 {hex}（{n}）。0x1F4 或 1F4h 是 16 進位，500 是 10 進位；+100、-0x20 是從目前位置相對移動。", { hex:"0x" + s.buf.size.toString(16).toUpperCase(), n:fmtNum(s.buf.size) }), value:"0x" + s.cur.toString(16).toUpperCase(), ok:tr("跳至") });
-  if (v == null || hx.tab !== t) return; const n = parseOffset(v, s.cur); if (n == null || Number.isNaN(n)){ toast(tr("看不懂這個位址")); return; }
+  const v = await promptText({ title:tr("Go to Offset"), text:tr("File size {hex} ({n}). 0x1F4 or 1F4h is hexadecimal and 500 is decimal. +100 and -0x20 move relative to the current position.", { hex:"0x" + s.buf.size.toString(16).toUpperCase(), n:fmtNum(s.buf.size) }), value:"0x" + s.cur.toString(16).toUpperCase(), ok:tr("Go") });
+  if (v == null || hx.tab !== t) return; const n = parseOffset(v, s.cur); if (n == null || Number.isNaN(n)){ toast(tr("Can't understand this offset")); return; }
   s.cur = s.anchor = Math.max(0, Math.min(n, s.buf.size)); s.nib = 0; s.lastEdit = null; hexEnsureVisible(s.cur, true); hexRender(); hexInspect(); updateStatus(); focusEditor();
 }
 async function hexSelRange(){
   const t = hx.tab; if (!t) return; const s = t.hex;
-  const v = await promptText({ title:tr("選取範圍"), text:tr("輸入「起點, 長度」，例如 0x100, 64 或 256, 0x40。數字規則和「跳至位址」相同。"), value:"0x" + s.cur.toString(16).toUpperCase() + ", 16", ok:tr("選取") });
+  const v = await promptText({ title:tr("Select Range"), text:tr("Enter “start, length”, such as 0x100, 64 or 256, 0x40. Numbers work as in Go to Offset."), value:"0x" + s.cur.toString(16).toUpperCase() + ", 16", ok:tr("Select") });
   if (v == null || hx.tab !== t) return; const parts = v.split(/[,\uFF0C]/); const a = parseOffset(parts[0] || "", s.cur), n = parseOffset(parts[1] || "", 0);
-  if (a == null || n == null || n < 0){ toast(tr("格式不正確，請輸入「起點, 長度」")); return; }
+  if (a == null || n == null || n < 0){ toast(tr("Wrong format. Enter “start, length”.")); return; }
   s.anchor = Math.max(0, Math.min(a, s.buf.size)); s.cur = Math.min(s.buf.size, s.anchor + n); s.nib = 0; s.lastEdit = null; hexEnsureVisible(s.anchor, true); hexRender(); hexInspect(); updateStatus(); focusEditor();
 }
 function hexPattern(){
@@ -374,12 +374,12 @@ function hexPattern(){
     const out = [];
     for (const tk of raw.replace(/\\x|0x/gi, " ").replace(/[,;]/g, " ").trim().split(/\s+/)){
       if (/^\?{1,2}$/.test(tk)){ out.push(-1); continue; }
-      if (!/^[0-9a-f]+$/i.test(tk) || tk.length % 2) return { error:tr("Hex 格式不正確，例如：4D 5A ?? 00") };
+      if (!/^[0-9a-f]+$/i.test(tk) || tk.length % 2) return { error:tr("Invalid hex. Example: 4D 5A ?? 00") };
       for (let i = 0; i < tk.length; i += 2) out.push(parseInt(tk.substr(i, 2), 16));
     }
     return out.length ? { pat:out, ci:false } : null;
   }
-  const bytes = hexEncodeText(raw, true); if (!bytes) return { error:tr("這段文字無法用目前的文字欄編碼表示") };
+  const bytes = hexEncodeText(raw, true); if (!bytes) return { error:tr("This text can't be represented in the text column's encoding") };
   const ci = !hx.findCase; return { pat: Array.from(bytes, b => ci && b >= 65 && b <= 90 ? b | 32 : b), ci };
 }
 function hexMatchAt(d, p, pat, ci){ for (let j = 0; j < pat.length; j++){ const q = pat[j]; if (q < 0) continue; let b = d[p + j]; if (ci && b >= 65 && b <= 90) b |= 32; if (b !== q) return false; } return true; }
@@ -388,11 +388,11 @@ async function hexFindNext(dir){
   if (!P){ $("#hxFind").focus(); return; }
   info.classList.toggle("is-error", !!P.error); if (P.error){ info.textContent = P.error; return; }
   const s = t.hex, buf = s.buf, pat = P.pat, ci = P.ci, m = pat.length, size = buf.size, CH = 16 << 20;
-  if (m > size){ info.textContent = tr("找不到"); return; }
+  if (m > size){ info.textContent = tr("Not found"); return; }
   const sel = hexSel(s), from = dir > 0 ? (sel ? sel[0] + 1 : s.cur) : (sel ? sel[0] : s.cur);
   const tok = ++hx.findTok, t0 = performance.now(); let scanned = 0;
   const first = pat[0] >= 0 && !(ci && pat[0] >= 97 && pat[0] <= 122) ? pat[0] : -1;
-  const tick = n => { scanned += n; if (performance.now() - t0 > 250) info.textContent = tr("搜尋中… {n}%", { n:Math.min(99, Math.floor(scanned / size * 100)) }); };
+  const tick = n => { scanned += n; if (performance.now() - t0 > 250) info.textContent = tr("Searching… {n}%", { n:Math.min(99, Math.floor(scanned / size * 100)) }); };
   async function fwd(a0, a1){
     for (let a = a0; a < a1; a += CH){
       if (tok !== hx.findTok) return -2; const b = Math.min(a1, a + CH), d = await buf.readAsync(a, b - a + m - 1), lim = b - a;
@@ -413,9 +413,9 @@ async function hexFindNext(dir){
   if (dir > 0){ at = await fwd(from, size); if (at === -1 && from > 0){ at = await fwd(0, Math.min(from, size)); wrapped = at >= 0; } }
   else { at = await bwd(0, from); if (at === -1 && from < size){ at = await bwd(from, size); wrapped = at >= 0; } }
   if (at === -2 || tok !== hx.findTok || hx.tab !== t) return;
-  if (at < 0){ info.textContent = tr("找不到"); return; }
+  if (at < 0){ info.textContent = tr("Not found"); return; }
   s.anchor = at; s.cur = at + m; s.nib = 0; s.lastEdit = null; hexEnsureVisible(at, true); hexRender(); hexInspect(); updateStatus();
-  info.textContent = tr("找到：{at}", { at:"0x" + at.toString(16).toUpperCase() }) + (wrapped ? (dir > 0 ? tr("（已從頭開始）") : tr("（已從尾端開始）")) : "");
+  info.textContent = tr("Found at {at}", { at:"0x" + at.toString(16).toUpperCase() }) + (wrapped ? (dir > 0 ? tr(" (wrapped to the start)") : tr(" (wrapped to the end)")) : "");
 }
 function hexFocusFind(){ const f = $("#hxFind"); f.focus(); f.select(); }
 
@@ -425,7 +425,7 @@ const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; 
 async function makeZip(name, blob){
   let crc = 0xFFFFFFFF; const CH = 8 << 20;
   for (let a = 0; a < blob.size; a += CH){ const d = new Uint8Array(await blob.slice(a, a + CH).arrayBuffer()); for (let i = 0; i < d.length; i++) crc = CRC_T[(crc ^ d[i]) & 255] ^ (crc >>> 8);
-    if (blob.size > CH) toast(tr("正在封裝… {n}%", { n:Math.min(100, Math.round((a + d.length) / blob.size * 100)) })); }
+    if (blob.size > CH) toast(tr("Packing… {n}%", { n:Math.min(100, Math.round((a + d.length) / blob.size * 100)) })); }
   crc = (crc ^ 0xFFFFFFFF) >>> 0;
   const fn = new TextEncoder().encode(name), now = new Date(), size = blob.size;
   const time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1), date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
@@ -436,20 +436,20 @@ async function makeZip(name, blob){
 }
 async function hexSave(t, asNew){
   let name = t.name; const s = t.hex;
-  if (s.loading){ toast(tr("內容還在載入，請稍候再存")); return false; }
-  if (asNew && !NATIVE){ const v = await promptText({ title:tr("另存新檔"), text:tr("輸入檔名。"), value:name, ok:tr("儲存") }); if (v == null || !v.trim()) return false; name = v.trim(); }
-  const dl = await getDownloads(); if (!dl){ toast(tr("這個檢視無法下載檔案")); return false; }
+  if (s.loading){ toast(tr("The content is still loading. Save again in a moment.")); return false; }
+  if (asNew && !NATIVE){ const v = await promptText({ title:tr("Save As"), text:tr("Enter a file name."), value:name, ok:tr("Save") }); if (v == null || !v.trim()) return false; name = v.trim(); }
+  const dl = await getDownloads(); if (!dl){ toast(tr("This view can't download files")); return false; }
   const blob = s.buf.toBlob(); let fname = name, data = blob;
   if (!LOCAL && !DL_EXT.has(extOf(name))){
     const tooBig = blob.size > 0xFFFF0000;
-    const r = await ask({ title:tr("「{name}」無法用原本的副檔名下載", { name }), text:tr("網頁沙盒只允許下載 png、pdf、zip、txt 等少數格式。可以包成「{name}.zip」，解壓縮後就是原檔（不壓縮、內容一個位元組都不變）；或存成「{name}.txt」，下載後把結尾的 .txt 刪掉。", { name }),
-      actions:[{ id:"cancel", label:tr("取消") }, { id:"txt", label:tr("存成 .txt"), primary:tooBig }, ...(tooBig ? [] : [{ id:"zip", label:tr("包成 .zip"), primary:true }])] });
+    const r = await ask({ title:tr("“{name}” can't be downloaded with its own extension", { name }), text:tr("The page sandbox only allows a few formats such as png, pdf, zip and txt. You can wrap it in “{name}.zip”, which unzips to the original file byte for byte, or save it as “{name}.txt” and remove the trailing .txt after downloading.", { name }),
+      actions:[{ id:"cancel", label:tr("Cancel") }, { id:"txt", label:tr("Save as .txt"), primary:tooBig }, ...(tooBig ? [] : [{ id:"zip", label:tr("Wrap in .zip"), primary:true }])] });
     if (r === "zip"){ data = await makeZip(name, blob); fname = name + ".zip"; } else if (r === "txt") fname = name + ".txt"; else return false;
   }
   try { const r = await dl.save({ filename:fname, data, path: asNew ? null : t.path }); if (r && r.path){ t.path = r.path; name = fname = r.filename; } if (r && r.mtime != null) t.mtime = r.mtime; }
-  catch(e){ const code = e && e.code; toast(code === "declined" ? tr("已取消儲存") : code === "rate_limited" ? tr("已有一個儲存對話框開著，請先處理") : tr("無法儲存：{reason}", { reason:(e && e.message) || code || tr("未知錯誤") })); return false; }
+  catch(e){ const code = e && e.code; toast(code === "declined" ? tr("Save canceled") : code === "rate_limited" ? tr("A save dialog is already open. Finish that one first.") : tr("Can't save: {reason}", { reason:(e && e.message) || code || tr("unknown error") })); return false; }
   s.buf = new HexBuf(blob); s.clean = s.buf.pieces; s.undo = []; s.redo = []; s.version++; s.lastEdit = null; t.name = name;
-  renderTabs(); if (hx.tab === t){ hx.sig = ""; hexRefresh(); } persistSoon(); toast(tr("已儲存 {name}", { name:fname })); return true;
+  renderTabs(); if (hx.tab === t){ hx.sig = ""; hexRefresh(); } persistSoon(); toast(tr("Saved {name}", { name:fname })); return true;
 }
 
 /* --- switch a tab between text and hex in place --- */
@@ -461,13 +461,13 @@ async function toggleHexView(t = cur()){
     const dirty = isDirty(t);
     let blob;
     if (t.bytes && !dirty) blob = new Blob([t.bytes]);
-    else { const e = encodeText(t.doc.getValue(EOLS[t.eol]), t.encoding, t.bom && bomCapable(normEnc(t.encoding))); blob = new Blob([e.bytes]); if (e.badCount) toast(tr("有 {n} 個字元無法用 {enc} 表示，在 Hex 中顯示為 ?", { n:e.badCount, enc:ENC_LABEL[normEnc(t.encoding)] })); }
+    else { const e = encodeText(t.doc.getValue(EOLS[t.eol]), t.encoding, t.bom && bomCapable(normEnc(t.encoding))); blob = new Blob([e.bytes]); if (e.badCount) toast(tr("{n} characters can't be represented in {enc} and show as ? in Hex", { n:e.badCount, enc:ENC_LABEL[normEnc(t.encoding)] })); }
     nt = makeHexTab({ name:t.name, path:t.path, blob, dirty }); docDel(t.id);
   } else {
     const s = t.hex; if (s.loading) return;
-    if (s.buf.size > 25 * 1024 * 1024){ toast(tr("超過 25 MB 的檔案只能用 Hex 檢視")); return; }
+    if (s.buf.size > 25 * 1024 * 1024){ toast(tr("Files over 25 MB can only be viewed in Hex")); return; }
     const data = await s.buf.readAsync(0, s.buf.size), dirty = isDirty(t), r = decode(data.buffer);
-    if (looksBinary(data.buffer)) toast(tr("這看起來是二進位檔，以文字顯示可能會是亂碼；在文字檢視下修改再存檔會破壞內容"));
+    if (looksBinary(data.buffer)) toast(tr("This looks like a binary file, so the text may be garbled. Editing and saving it in text view will damage it."));
     nt = makeTab({ name:t.name, path:t.path, text:r.text, eol:detectEol(r.text), bom:r.bom, encoding:r.encoding, bytes: dirty ? null : data.buffer, dirty });
     hexForget(t.id);
   }
@@ -572,6 +572,6 @@ $("#hxCase").addEventListener("click", e => { hx.findCase = !hx.findCase; e.curr
 $("#hxFind").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); hexFindNext(e.shiftKey ? -1 : 1); } else if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); focusEditor(); } });
 document.querySelectorAll("#hxFindMode button").forEach(b => b.addEventListener("click", () => {
   hx.findMode = b.dataset.m; document.querySelectorAll("#hxFindMode button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
-  $("#hxFind").placeholder = hx.findMode === "hex" ? tr("搜尋 hex：4D 5A ?? 00") : tr("搜尋文字"); $("#hxCase").hidden = hx.findMode === "hex"; $("#hxFind").focus(); }));
+  $("#hxFind").placeholder = hx.findMode === "hex" ? tr("Search hex: 4D 5A ?? 00") : tr("Search text"); $("#hxCase").hidden = hx.findMode === "hex"; $("#hxFind").focus(); }));
 document.querySelectorAll("#hxEndian button").forEach(b => b.addEventListener("click", () => hexSetLE(b.dataset.le === "1")));
 

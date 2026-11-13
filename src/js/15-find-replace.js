@@ -10,7 +10,7 @@ function buildRe(){
   if (findState.word) src = "(?<![\\p{L}\\p{N}_])(?:" + src + ")(?![\\p{L}\\p{N}_])";
   try { return new RegExp(src, "gm" + (findState.caseSens ? "" : "i") + (findState.word ? "u" : "")); }
   catch(e){
-    input.classList.add("is-error"); info.classList.add("is-error"); info.textContent = tr("運算式錯誤：{reason}", { reason:e.message.replace(/^Invalid regular expression: /, "") }); return null;
+    input.classList.add("is-error"); info.classList.add("is-error"); info.textContent = tr("Expression error: {reason}", { reason:e.message.replace(/^Invalid regular expression: /, "") }); return null;
   }
 }
 function allMatches(text, re, cap = 20000){
@@ -36,7 +36,7 @@ function refreshHits(){
   if (!re){ if (!$("#findInput").value) info.textContent = ""; return []; }
   const d = cm.getDoc(); const all = allMatches(d.getValue(), re);
   cm.operation(() => { for (const [i, len] of all.slice(0, 5000)) if (len) hitMarks.push(d.markText(d.posFromIndex(i), d.posFromIndex(i + len), { className:"cm-hit" })); });
-  info.textContent = all.length ? tr("共 {n} 筆", { n:fmtNum(all.length) + (all.length >= 20000 ? "+" : "") }) : tr("找不到");
+  info.textContent = all.length ? tr("{n} matches", { n:fmtNum(all.length) + (all.length >= 20000 ? "+" : "") }) : tr("Not found");
   return all;
 }
 function findNext(dir){
@@ -45,16 +45,16 @@ function findNext(dir){
   const d = cm.getDoc(); const text = d.getValue();
   const from = d.indexFromPos(d.getCursor("from")), to = d.indexFromPos(d.getCursor("to"));
   const all = allMatches(text, re); const info = $("#findInfo");
-  if (!all.length){ info.textContent = tr("找不到「{text}」", { text:$("#findInput").value }); return; }
+  if (!all.length){ info.textContent = tr("Can't find “{text}”", { text:$("#findInput").value }); return; }
   let k = -1, wrapped = false;
   if (dir > 0){ k = all.findIndex(([i, len]) => i > from || (i === from && (i + len > to || (len === 0 && from !== to)))); if (k < 0 && from === to) k = all.findIndex(([i]) => i >= to);
                 if (k < 0 && findState.wrap){ k = 0; wrapped = true; } }
   else { for (let j = all.length - 1; j >= 0; j--) if (all[j][0] < from){ k = j; break; } if (k < 0 && findState.wrap){ k = all.length - 1; wrapped = true; } }
-  if (k < 0){ info.textContent = dir > 0 ? tr("已到文件結尾") : tr("已到文件開頭"); return; }
+  if (k < 0){ info.textContent = dir > 0 ? tr("Reached the end of the document") : tr("Reached the start of the document"); return; }
   const [i, len] = all[k];
   d.setSelection(d.posFromIndex(i), d.posFromIndex(i + len));
   cm.scrollIntoView({ from: d.posFromIndex(i), to: d.posFromIndex(i + len) }, 80);
-  info.textContent = tr("第 {i} / {n} 筆", { i:fmtNum(k + 1), n:fmtNum(all.length) }) + (wrapped ? (dir > 0 ? tr("，已從頭開始") : tr("，已從尾端開始")) : "");
+  info.textContent = tr("Match {i} of {n}", { i:fmtNum(k + 1), n:fmtNum(all.length) }) + (wrapped ? (dir > 0 ? tr(", wrapped to the start") : tr(", wrapped to the end")) : "");
 }
 function replaceOne(){
   const re = buildRe(); if (!re) return; const d = cm.getDoc(); const text = d.getValue();
@@ -75,11 +75,11 @@ function replaceAllIn(doc, re, tpl){
 }
 function replaceAll(allTabs){
   const re = buildRe(); if (!re) return; const tpl = $("#replInput").value;
-  if (!allTabs){ const n = replaceAllIn(cm.getDoc(), re, tpl); $("#findInfo").textContent = n ? tr("已取代 {n} 筆", { n:fmtNum(n) }) : tr("找不到"); return; }
+  if (!allTabs){ const n = replaceAllIn(cm.getDoc(), re, tpl); $("#findInfo").textContent = n ? tr("Replaced {n} matches", { n:fmtNum(n) }) : tr("Not found"); return; }
   let total = 0, files = 0;
   tabs.forEach(t => { const n = replaceAllIn(t.doc, re, tpl); if (n){ total += n; files++; } });
   renderTabs(); updateStatus(); persistSoon();
-  $("#findInfo").textContent = total ? tr("已在 {tabs} 個分頁取代 {n} 筆", { tabs:files, n:fmtNum(total) }) : tr("所有分頁都找不到");
+  $("#findInfo").textContent = total ? tr("Replaced {n} matches in {tabs} tabs", { tabs:files, n:fmtNum(total) }) : tr("Not found in any tab");
 }
 function markAll(){
   const re = buildRe(); if (!re) return; const t = curT(); const d = cm.getDoc(); const all = allMatches(d.getValue(), re);
@@ -87,9 +87,9 @@ function markAll(){
   cm.operation(() => { for (const [i, len] of all){ const p = d.posFromIndex(i); lines.add(p.line); if (len) t.userMarks.push(d.markText(p, d.posFromIndex(i + len), { className:"cm-userMark" })); }
     if (findState.bookmark) lines.forEach(l => setBm(cm, l, true)); });
   if (findState.bookmark) persistSoon();
-  $("#findInfo").textContent = tr("已標記 {n} 筆", { n:fmtNum(all.length) }) + (findState.bookmark ? tr("，{n} 行加上書籤", { n:fmtNum(lines.size) }) : "");
+  $("#findInfo").textContent = tr("Marked {n} matches", { n:fmtNum(all.length) }) + (findState.bookmark ? tr(", bookmarked {n} lines", { n:fmtNum(lines.size) }) : "");
 }
-function clearMarks(){ const t = curT(); t.userMarks.forEach(m => m.clear()); t.userMarks = []; $("#findInfo").textContent = tr("已清除標記"); }
+function clearMarks(){ const t = curT(); t.userMarks.forEach(m => m.clear()); t.userMarks = []; $("#findInfo").textContent = tr("Marks cleared"); }
 function openFind(kind){
   const p = $("#findPanel"); const wasHidden = p.hidden; p.hidden = false;
   $("#replaceRow").hidden = kind !== "replace";

@@ -38,7 +38,7 @@ function addTab(t, activate = true){
   else { tabs.push(t); if (activate) activateTab(tabs.length - 1); }
   renderTabs(); persistSoon();
 }
-function newTab(){ const n = seq++; addTab(makeTab({ name:tr("新文件 {n}", { n }), untitled:true })); focusEditor(); }
+function newTab(){ const n = seq++; addTab(makeTab({ name:tr("Untitled {n}", { n }), untitled:true })); focusEditor(); }
 
 function activateTab(i, force){
   if (i < 0 || i >= tabs.length) return;
@@ -63,15 +63,15 @@ async function closeTab(i){
   const t = tabs[i]; if (!t) return false;
   if (isDirty(t)){
     if (i !== active) activateTab(i);
-    const r = await ask({ title:tr("「{name}」尚未儲存", { name:t.name }), text:tr("關閉後，這個分頁的內容會從工作階段中移除。"), actions:[
-      { id:"cancel", label:tr("取消") }, { id:"discard", label:tr("不儲存") }, { id:"save", label:tr("儲存"), primary:true } ]});
+    const r = await ask({ title:tr("“{name}” has unsaved changes", { name:t.name }), text:tr("Closing removes this tab's content from the session."), actions:[
+      { id:"cancel", label:tr("Cancel") }, { id:"discard", label:tr("Don't Save") }, { id:"save", label:tr("Save"), primary:true } ]});
     if (r === "save"){ if (!(await saveTab(t))) return false; }
     else if (r !== "discard") return false;
   }
   const idx = tabs.indexOf(t); if (idx < 0) return false;
   if (cmp.on && (t === cmp.left || t === cmp.right)) endCompare();
   tabs.splice(idx, 1); if (isHex(t)) hexForget(t.id); else docDel(t.id);
-  if (!tabs.length){ active = -1; const n = seq++; tabs.push(makeTab({ name:tr("新文件 {n}", { n }), untitled:true })); activateTab(0, true); }
+  if (!tabs.length){ active = -1; const n = seq++; tabs.push(makeTab({ name:tr("Untitled {n}", { n }), untitled:true })); activateTab(0, true); }
   else { let next = active; if (idx < active) next = active - 1; else if (idx === active) next = Math.min(idx, tabs.length - 1); active = -1; activateTab(next, true); }
   if (t === split.tab && !$("#pane2").hidden){ const nt = isHex(cur()) ? tabs.find(x => !isHex(x)) : cur(); if (nt) showInPane2(nt, true); else closeSplit(); }
   renderTabs(); persistSoon(); return true;
