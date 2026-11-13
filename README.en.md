@@ -89,7 +89,7 @@ The tests need Chromium. `/opt/pw-browsers/chromium` is used automatically when 
 src/head.html        <title>, meta tags, fonts
 src/markup.html      page layout HTML
 src/styles/*.css     split by area, concatenated in file-name order
-src/i18n/            interface translations (en, zh-CN, vi JSON keyed by the Traditional Chinese text), plus the help page and sample file for each language
+src/i18n/            interface translations (zh-TW, zh-CN, vi JSON keyed by the English text; en.json only holds plural forms and other exceptions), plus the help page and sample file for each language
 src/js/*.js          split by feature, concatenated in file-name order and run inside one function
 build.mjs            assembles the page, bundles CodeMirror, copies the other libraries
 build-mac.mjs        wraps the page into the macOS app; macos/ holds the Swift sources, Info.plist and icon

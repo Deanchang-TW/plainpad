@@ -76,7 +76,7 @@ PP_PLATFORM=mac node tests/run.mjs   # 模擬 Mac 鍵盤（⌘）；在 Mac 上�
 src/head.html        <title>、meta、字型
 src/markup.html      版面 HTML
 src/styles/*.css     依區塊分檔，按檔名順序串接
-src/i18n/            介面翻譯（en、zh-CN、vi 的 JSON，鍵是繁中原文），以及各語言的說明頁與範例檔
+src/i18n/            介面翻譯（zh-TW、zh-CN、vi 的 JSON，鍵是英文原文；en.json 只放單複數等例外），以及各語言的說明頁與範例檔
 src/js/*.js          依功能分檔，按檔名順序串接，包在同一個函式裡執行
 build.mjs            組合頁面、打包 CodeMirror、複製其他函式庫
 build-mac.mjs        把頁面包成 macOS App；macos/ 是 Swift 原始碼、Info.plist 和圖示

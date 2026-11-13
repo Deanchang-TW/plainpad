@@ -72,16 +72,16 @@ npm run build:mac                # 產生 dist/mac/Plainpad.app（Swift + WKWebV
     只有在 Mac 上本來就是 Ctrl 的快速鍵（⌃G 跳至行、⌃⇧M Markdown 預覽、⌃⇧H Hex 切換）才寫 `Control`。
   - 依賴系統剪貼簿的步驟（原生的複製、貼上）在模擬平台時無法執行，用 `SPOOFED` 判斷。
   - 樣本檔和預期輸出放在 `tests/fixtures/`。編碼的預期輸出是用 Python codecs 產生的，不要用 App 自己的輸出當預期值。
-- **介面文字**以繁體中文撰寫，用使用者熟悉的說法，不要用系統內部的名詞。錯誤訊息要說明怎麼解決。
+- **介面文字**用使用者熟悉的說法，不要用系統內部的名詞。錯誤訊息要說明怎麼解決。各語言的譯文都照這個原則寫。
 - **多國語言**（繁中、英文、簡中、越南文）：
-  - JS 裡的介面文字一律寫成 `tr("繁中原文")`，繁中原文就是翻譯的鍵。有變數時用 `tr("已儲存 {name}", { name })`，不要用字串串接或樣板字串組句子，因為各語言語序不同。
-  - `src/markup.html` 的文字和 title、aria-label、placeholder 會在啟動時依同樣的鍵翻譯，不需要另外處理。
-  - 新增或修改文字後，要在 `src/i18n/en.json`、`zh-CN.json`、`vi.json` 補上翻譯。`node build.mjs --i18n-todo` 會列出缺少的項目。建置會檢查：每個語言都有翻譯、佔位符 {…} 一致、沒有不再使用的項目、tr() 以外沒有中文。
-  - 英文需要單複數時，翻譯寫成 `{ "one": "…", "other": "…" }`，依變數 n 選擇。
-  - 不是介面文字的中文（字元範圍、編碼偵測用的字表）在同一行加上 `i18n-ignore` 註解。
+  - **原文與翻譯的鍵都是英文**，讓不懂中文的開發者也能讀懂、維護。JS 裡的介面文字一律寫成 `tr("English text")`。有變數時用 `tr("Saved {name}", { name })`，不要用字串串接或樣板字串組句子，因為各語言語序不同。
+  - `src/markup.html` 的文字和 title、aria-label、placeholder 會在啟動時依同樣的鍵翻譯。含字母的文字都會被當成介面文字；`Hex`、`UTF-8` 這類各語言都一樣的文字，在元素上加 `translate="no"`（只影響元素本身的文字，title 等屬性照樣翻譯）。
+  - 新增或修改文字後，要在 `src/i18n/zh-TW.json`、`zh-CN.json`、`vi.json` 補上翻譯。`node build.mjs --i18n-todo` 會列出缺少的項目。建置會檢查：這三個語言都有翻譯、佔位符 {…} 一致、沒有不再使用的項目、程式碼字串裡沒有中文。
+  - `src/i18n/en.json` 只放英文顯示和鍵不同的項目：單複數寫成 `{ "one": "…", "other": "…" }`，依變數 n 選擇（鍵用 other 的寫法）；或同一個英文字在不同地方要不同的鍵時（例如鍵 `Text column`，顯示為 `Text`）。
+  - 程式碼裡不是介面文字的中文（字元範圍、編碼偵測用的字表）在同一行加上 `i18n-ignore` 註解。
   - 說明頁與範例檔在 `src/i18n/help/`、`src/i18n/sample/`，每個語言一份，改內容時四份都要改。
-  - 測試預設以繁中（瀏覽器 locale zh-TW）執行；`open({ locale:"en-US" })` 可以用其他語言開啟。
-  - macOS App 的選單文字在 `macos/Sources/Localization.swift`，文件類型名稱在 `macos/Resources/*.lproj`。
+  - 測試預設以繁中（瀏覽器 locale zh-TW）執行，所以測試比對的是繁中畫面文字；`open({ locale:"en-US" })` 可以用其他語言開啟。
+  - macOS App 的選單文字在 `macos/Sources/Localization.swift`，鍵同樣是英文；文件類型名稱在 `macos/Resources/*.lproj`。
 - **commit**：
   - 個人專案，直接 commit 並推送到 `main`，不開分支、不走 PR。推送前先 `git pull --rebase`，並確認 `npm test` 全部通過。
   - 一個 commit 只做一件事。
