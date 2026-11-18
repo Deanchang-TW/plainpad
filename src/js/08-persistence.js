@@ -10,8 +10,8 @@ function persistableHex(t){ return t.hex.loading || t.hex.buf.blob.size <= HEX_P
 function sessionMeta(){
   const keep = tabs.filter(t => !isHex(t) || persistableHex(t));
   return { v:2, seq, active: Math.max(0, keep.indexOf(cur())), settings, tabs: keep.map(t => isHex(t)
-    ? { kind:"hex", id:t.id, name:t.name, path:t.path, mtime:t.mtime, dirty:isDirty(t), cur:t.hex.cur }
-    : { id:t.id, name:t.name, path:t.path, mtime:t.mtime, lang:t.langId, eol:t.eol, bom:t.bom, enc:t.encoding, untitled:t.untitled, dirty:isDirty(t), cur:t.doc.getCursor(), bm: bmLines(t) }) };
+    ? { kind:"hex", id:t.id, name:t.name, path:t.path, mtime:t.mtime, dirty:isDirty(t), cur:t.hex.cur, md:!!t.md }
+    : { md:!!t.md, id:t.id, name:t.name, path:t.path, mtime:t.mtime, lang:t.langId, eol:t.eol, bom:t.bom, enc:t.encoding, untitled:t.untitled, dirty:isDirty(t), cur:t.doc.getCursor(), bm: bmLines(t) }) };
 }
 function docsPersist(){
   const changed = tabs.filter(t => !isHex(t) && t.savedGen !== t.doc.changeGeneration());
@@ -41,6 +41,8 @@ async function restore(){
   if (!s){ s = readJSON(OLD_STORE_KEY); legacy = !!s; }
   if (!s || !Array.isArray(s.tabs) || !s.tabs.length) return false;
   applyStoredSettings(s); seq = s.seq || 1;
+  // Sessions from before the preview was per tab kept one switch for all tabs; it now applies to the active tab only.
+  const oldMd = settings.mdPreview === true && !s.tabs.some(o => "md" in o); delete settings.mdPreview;
   const texts = new Map();
   if (!legacy){
     const ids = s.tabs.filter(o => o.kind !== "hex" && o.id).map(o => o.id);
@@ -48,11 +50,12 @@ async function restore(){
   }
   const lost = [];
   s.tabs.forEach(o => {
-    if (o.kind === "hex"){ if (o.id){ const h = hexRestoreTab(o); h.mtime = o.mtime; tabs.push(h); } return; }
+    if (o.kind === "hex"){ if (o.id){ const h = hexRestoreTab(o); h.mtime = o.mtime; h.md = !!o.md; tabs.push(h); } return; }
     let text = legacy ? o.text : texts.get(o.id);
     if (text == null){ if (o.untitled && !o.dirty) text = ""; else { lost.push(o.name); return; } }
     const t = makeTab({ id: legacy ? null : o.id, name:o.name, path:o.path || null, text, lang: storedLang(o), eol: EOLS[o.eol] ? o.eol : "LF", bom:!!o.bom, encoding:o.enc || "UTF-8", untitled:!!o.untitled, dirty:!!o.dirty, bm:o.bm });
     if (o.cur) t.doc.setCursor(o.cur);
+    t.md = !!o.md;
     t.mtime = o.mtime;   // modification time of the file on disk when last opened or saved (macOS app only)
     if (!legacy) t.savedGen = t.doc.changeGeneration();
     tabs.push(t);
@@ -60,7 +63,9 @@ async function restore(){
   if (lost.length) setTimeout(() => toast(tr("The content of these tabs was not saved: {names}", { names:lost.join(tr(", ")) })), 600);
   if (legacy) session.migrating = true;
   if (!tabs.length) return false;
-  active = -1; activateTab(Math.min(Math.max(0, s.active | 0), tabs.length - 1), true);
+  const first = Math.min(Math.max(0, s.active | 0), tabs.length - 1);
+  if (oldMd) tabs[first].md = true;
+  active = -1; activateTab(first, true);
   return true;
 }
 /* Resolves true when this window owns the session. Waits a few seconds, because a closing window or a preview may still hold it briefly. */

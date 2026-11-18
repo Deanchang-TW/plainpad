@@ -3,10 +3,12 @@ const md = { open:false, timer:0, blocks:[], tab:null, ignoreEd:0, ignoreMd:0, g
 function syncHeads(){ $("#p1Head").hidden = $("#pane2").hidden && !md.open; }
 function mdEd(){ return (cm === cm2 && !$("#pane2").hidden && split.tab) ? cm2 : cmMain; }
 function mdTab(){ return mdEd() === cm2 ? split.tab : cur(); }
+/* The preview belongs to the tab it was opened on (t.md, kept with the session): switching to or closing into another
+   tab shows that tab's own choice, so a preview opened for a README does not follow into a SQL file. */
 function toggleMd(force){
   const on = force ?? !md.open; md.open = on;
   $("#pane3").hidden = !on; $("#tMd").setAttribute("aria-pressed", String(on)); syncHeads();
-  if (settings.mdPreview !== on){ settings.mdPreview = on; persistSoon(); }
+  const t = cur(); if (t && !!t.md !== on){ t.md = on; persistSoon(); }
   if (on) renderMd();
   cmMain.refresh(); if (!$("#pane2").hidden) cm2.refresh();
 }

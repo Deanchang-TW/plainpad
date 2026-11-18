@@ -15,7 +15,7 @@ $("#filterInput").value = settings.filesFilter || ""; $("#skipDirs").checked = s
 applySettings(); renderTabs(); updateStatus(); syncLangSelect();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => mdSoon(0));
 new MutationObserver(() => mdSoon(0)).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
-$("#mdSync").checked = settings.mdSync !== false; if (settings.mdPreview) toggleMd(true);
+$("#mdSync").checked = settings.mdSync !== false;
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { cmMain.refresh(); cm2.refresh(); });
 window.addEventListener("pagehide", persist);
 document.addEventListener("visibilitychange", () => { if (document.hidden) persist(); });

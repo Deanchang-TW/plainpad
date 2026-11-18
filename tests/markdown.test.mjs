@@ -83,5 +83,31 @@ export default [
     const html = Buffer.from((await p.evaluate(() => window.__saves[0].b64)), "base64").toString("utf8");
     assert.match(html, /<math/); assert.match(html, /<svg/); assert.doesNotMatch(html, /data-(tex|code)=/);
     assert.match(html, /#ECECFF/i, "diagram uses the light theme");
+  }},
+  { name: "the preview belongs to the tab it was opened on", async fn({ open, ready }){
+    /* A session from before the preview was per tab: one switch for all tabs, which now goes to the active tab only. */
+    const p = await open({ init: () => { if (sessionStorage.getItem("seeded")) return; sessionStorage.setItem("seeded", "1");
+      localStorage.setItem("plainpad.session.v1", JSON.stringify({ v:1, seq:3, active:1, settings:{ mdPreview:true }, tabs:[
+        { name:"query.sql", text:"SELECT 1;", lang:"sql", eol:"LF", enc:"UTF-8" }, { name:"README.md", text:"# Readme", lang:"md", eol:"LF", enc:"UTF-8" } ] })); } });
+    const shown = () => p.evaluate(() => !document.querySelector("#pane3").hidden);
+    const tab = n => p.click(`#tabs .tab >> nth=${n}`);
+    assert.equal(await shown(), true, "README.md was active, so it keeps the preview");
+    await tab(0); assert.equal(await shown(), false, "query.sql never had one");
+    await tab(1); assert.equal(await shown(), true);
+    assert.equal(await p.evaluate(() => "mdPreview" in window.__plainpad.settings), false, "the old shared switch is gone");
+
+    await p.evaluate(() => window.__plainpad.run("newTab")); assert.equal(await shown(), false, "a new tab starts without");
+    await p.evaluate(() => window.__plainpad.run("mdPreview")); assert.equal(await shown(), true);
+    await tab(0); assert.equal(await shown(), false);
+
+    /* Closing README.md lands on another tab, which shows its own choice instead of inheriting the preview. */
+    await tab(1); await p.evaluate(() => window.__plainpad.run("closeActive"));
+    assert.deepEqual(await p.evaluate(() => window.__plainpad.tabs().map(t => [t.name.replace(/\d+/, "#"), !!t.md])), [["query.sql", false], ["Untitled #", true]]);
+    assert.equal(await shown(), await p.evaluate(() => window.__plainpad.tabs()[[...document.querySelectorAll("#tabs .tab")].findIndex(e => e.classList.contains("is-active"))].md), "whatever tab it lands on shows its own choice");
+
+    await p.evaluate(() => window.__plainpad.persist()); await p.reload(); await ready(p);
+    await tab(1); assert.equal(await shown(), true, "kept with the session");
+    await tab(0); assert.equal(await shown(), false);
+    assert.deepEqual(p.errors, []);
   }}
 ];

@@ -54,7 +54,7 @@ function activateTab(i, force){
   syncHexPane(); $("#tHex").setAttribute("aria-pressed", String(isHex(t)));
   renderTabs(); updateStatus(); syncLangSelect();
   if (!$("#findPanel").hidden && cm === cmMain) refreshHits();
-  mdSoon(0);
+  if (!!t.md !== md.open) toggleMd(!!t.md); else mdSoon(0);
   const tabEl = $("#tabs").children[i]; tabEl && tabEl.scrollIntoView({ block:"nearest", inline:"nearest" });
   persistSoon();
 }
