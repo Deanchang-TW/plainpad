@@ -13,6 +13,10 @@ import WebKit
 ///   { type: "locale", lang, choice }                     the interface language, and whether it was chosen or "auto"
 ///   { type: "watch", files: [{ path, mtime }] }           the files the tabs came from, with the modification time the
 ///                                                         page last saw (null: unknown, take the file's current one)
+///   { type: "imageRoot", path }                           a tab's file, for its Markdown preview images; reply { token }
+///                                                         when the path is a watched file that exists, else an error
+/// Images next to that file are then served at `plainpad://app/__img/<token>/<relative path>` (see serveImage): the
+/// token stands for the file's folder, so image URLs never carry an absolute path.
 /// Files dropped on the window are opened by the app like files from Finder (see FileDropWebView), not by the page.
 /// The app calls back into the page through `window.__ppNative.run(name)`, `.open(items)`, `.changed(items)` and
 /// `.flush()`. open and changed items carry { token, name, path, mtime }; a changed item for a file that is gone is
@@ -34,6 +38,9 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
     /// the app becomes active; a difference is reported to the page once.
     private var watched: [String: Double] = [:]
     private var watchTimer: Timer?
+    /// token → folder whose images the Markdown preview may load (symlinks resolved). One token per folder.
+    private var imageRoots: [String: URL] = [:]
+    private static let imageTypes: Set<String> = ["png", "jpg", "jpeg", "gif", "webp", "svg"]
     /// Called with the page's interface language and the setting behind it ("auto" or a language).
     var onLocale: ((String, String) -> Void)?
 
@@ -134,6 +141,14 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
             }
             watched = next
             checkFiles()
+        case "imageRoot":
+            // Only for a file a tab came from: the page can't turn an arbitrary folder into an image source.
+            guard let path = body["path"] as? String, path.hasPrefix("/"), watched[path] != nil,
+                  FileManager.default.fileExists(atPath: path) else { log("imageRoot refused", body["path"] ?? ""); replyHandler(nil, "not a file in a tab"); return }
+            let folder = URL(fileURLWithPath: path).deletingLastPathComponent().resolvingSymlinksInPath()
+            let token = imageRoots.first { $0.value == folder }?.key ?? UUID().uuidString
+            imageRoots[token] = folder
+            replyHandler(["token": token], nil)
         default:
             replyHandler(nil, "unknown message \(type)")
         }
@@ -220,6 +235,7 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
             stream(file, to: task)
             return
         }
+        if path.hasPrefix("/__img/") { serveImage(url, to: task); return }
         let file = webRoot.appendingPathComponent(String(path.dropFirst())).standardizedFileURL
         guard file.path.hasPrefix(webRoot.path), let data = try? Data(contentsOf: file) else { fail(task, 404); return }
         task.didReceive(response(url, status: 200, mime: mimeType(file), length: data.count))
@@ -248,6 +264,32 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
         }
     }
 
+    /// `__img/<token>/<relative path>`: an image inside the folder the token stands for. Each segment is decoded on its
+    /// own (an encoded "/" can't add a level), "..", "." and empty segments are refused, and after symlinks are resolved
+    /// the file must still be inside the folder and have an image extension. Everything else is a 404.
+    private func serveImage(_ url: URL, to task: WKURLSchemeTask) {
+        let encoded = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedPath ?? ""
+        let parts = encoded.dropFirst("/__img/".count).split(separator: "/", omittingEmptySubsequences: false).map { String($0).removingPercentEncoding }
+        guard parts.count >= 2, let token = parts[0], let root = imageRoots[token] else { log("image refused: unknown token"); fail(task, 404); return }
+        let segments = parts.dropFirst()
+        guard segments.allSatisfy({ s in s.map { !$0.isEmpty && $0 != "." && $0 != ".." && !$0.contains("/") && !$0.contains("\0") } ?? false }) else {
+            log("image refused: bad path", encoded); fail(task, 404); return
+        }
+        let file = segments.reduce(root) { $0.appendingPathComponent($1!) }.resolvingSymlinksInPath()
+        var isDir: ObjCBool = false
+        guard file.path.hasPrefix(root.path.hasSuffix("/") ? root.path : root.path + "/"),
+              Self.imageTypes.contains(file.pathExtension.lowercased()),
+              FileManager.default.fileExists(atPath: file.path, isDirectory: &isDir), !isDir.boolValue,
+              let data = try? Data(contentsOf: file) else { log("image refused or missing:", file.path); fail(task, 404); return }
+        log("image", file.path)
+        // The page only uses these in <img>, where SVG scripts never run; the policy is a second lock if one is ever opened directly.
+        let headers = ["Content-Type": mimeType(file), "Content-Length": String(data.count), "Cache-Control": "no-cache",
+                       "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:"]
+        task.didReceive(HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!)
+        task.didReceive(data)
+        task.didFinish()
+    }
+
     private func response(_ url: URL, status: Int, mime: String, length: Int) -> HTTPURLResponse {
         HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1",
                         headerFields: ["Content-Type": mime, "Content-Length": String(length), "Cache-Control": "no-cache"])!
@@ -266,6 +308,9 @@ final class WebShell: NSObject, WKScriptMessageHandlerWithReply, WKURLSchemeHand
         case "json": return "application/json"
         case "svg": return "image/svg+xml"
         case "png": return "image/png"
+        case "jpg", "jpeg": return "image/jpeg"
+        case "gif": return "image/gif"
+        case "webp": return "image/webp"
         case "woff2": return "font/woff2"
         default: return "application/octet-stream"
         }

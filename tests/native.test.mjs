@@ -122,5 +122,86 @@ export default [
     await p.waitForFunction(() => /deleted or moved/.test(document.querySelector("#toast").textContent));
     assert.equal((await tab()).dirty, true);
     assert.deepEqual(p.errors, []);
+  }},
+
+  { name: "inside the macOS app, the Markdown preview shows images next to the file and nothing outside its folder", async fn({ open }){
+    /* The fake app hands out one token per folder, as WebShell.swift does, and refuses paths outside /w and /Users. */
+    const p = await open({ downloads: false, init: () => {
+      window.__bridge = [];
+      window.webkit = { messageHandlers: { plainpad: { postMessage: async msg => {
+        window.__bridge.push(msg);
+        if (msg.type === "save") return { status: "saved", path: "/Users/me/Documents/" + msg.filename, filename: msg.filename };
+        if (msg.type === "imageRoot"){
+          if (!/^\/(w|Users)\//.test(msg.path)) throw new Error("not a file in a tab");
+          return { token: "dir " + msg.path.slice(0, msg.path.lastIndexOf("/")) };
+        }
+        return null;
+      } } } };
+    } });
+    const doc = [
+      "![space](<img/my pic.png>)", "![chinese](img/圖表.png?v=2#top)", "![hash](img/a%23b.png)", "![inside](img/../top.png)",
+      "![up](../secret.png)", "![missing](img/missing.png)", "![web](https://example.com/x.png)", "![absolute](/etc/x.png)",
+      "![text](notes.txt)"
+    ].join("\n\n") + "\n";
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+    const requests = [];
+    await p.ctx.route("**/__file/*", r => r.fulfill({ body: doc, contentType: "application/octet-stream" }));
+    await p.ctx.route("**/__img/**", r => { const u = new URL(r.request().url()).pathname; requests.push(u.slice(u.indexOf("/__img/")));
+      return /missing/.test(u) ? r.fulfill({ status: 404, body: "" }) : r.fulfill({ body: png, contentType: "image/png" }); });
+    await p.evaluate(() => window.__ppNative.open([{ token: "m1", name: "doc.md", path: "/w/doc.md" }]));
+    await p.waitForFunction(() => window.__plainpad.tabs().some(t => t.path === "/w/doc.md"));
+    await p.evaluate(() => window.__plainpad.run("mdPreview"));
+    const preview = () => p.evaluate(() => ({
+      images: [...document.querySelectorAll("#mdBody img")].map(i => [i.alt, i.getAttribute("src"), i.naturalWidth]),
+      notes: [...document.querySelectorAll("#mdBody .md-img")].map(n => n.textContent) }));
+    await p.waitForFunction(() => document.querySelectorAll("#mdBody img").length === 4 && [...document.querySelectorAll("#mdBody img")].every(i => i.complete && i.naturalWidth)
+      && document.querySelectorAll("#mdBody .md-img").length === 5);
+
+    const tok = encodeURIComponent("dir /w");
+    let r = await preview();
+    assert.deepEqual(r.images, [
+      ["space", `__img/${tok}/img/my%20pic.png`, 1],
+      ["chinese", `__img/${tok}/img/${encodeURIComponent("圖表.png")}`, 1],
+      ["hash", `__img/${tok}/img/a%23b.png`, 1],
+      ["inside", `__img/${tok}/top.png`, 1]], "relative paths are encoded per segment, without ?query or #fragment, .. resolved");
+    assert.deepEqual(r.notes, [
+      "Image: up (the preview shows only images in the Markdown file's folder and its subfolders)",
+      "Image not found: missing. Check that the file exists and that its path is relative to the Markdown file.",
+      "Image: web (the preview can't load external or relative images, but exported HTML can)",
+      "Image: absolute (the preview can't load external or relative images, but exported HTML can)",
+      "Image: text (the preview shows only PNG, JPEG, GIF, WebP and SVG images)"]);
+    assert.ok(requests.every(u => !u.includes("..") && !u.includes("secret") && !u.includes("etc")), "nothing outside the folder is requested");
+    assert.deepEqual(await p.evaluate(() => window.__bridge.filter(m => m.type === "imageRoot")), [{ type: "imageRoot", path: "/w/doc.md" }], "one request per folder");
+
+    /* Typing redraws the preview; images already shown are kept instead of loading again. */
+    const before = requests.length;
+    await p.evaluate(() => window.__plainpad.cmMain.replaceRange("# Title\n\n", { line: 0, ch: 0 }));
+    await p.waitForFunction(() => document.querySelector("#mdBody h1"));
+    await p.waitForTimeout(300);
+    assert.equal(requests.length - before, 1, "only the missing image is asked for again");
+
+    /* After Save As the images come from the new folder. */
+    await p.evaluate(() => window.__plainpad.run("saveAs"));
+    await p.waitForFunction(() => window.__bridge.filter(m => m.type === "imageRoot").length === 2);
+    assert.equal(await p.evaluate(() => window.__bridge.filter(m => m.type === "imageRoot")[1].path), "/Users/me/Documents/doc.md");
+    await p.waitForFunction(t => document.querySelector("#mdBody img").getAttribute("src").startsWith("__img/" + t + "/"), encodeURIComponent("dir /Users/me/Documents"));
+
+    /* A new tab that was never saved has no folder: its images stay as notes. */
+    await p.evaluate(() => { const A = window.__plainpad; A.A.newTab(); A.cmMain.setValue("![x](img/a.png)\n"); if (!A.md.open) A.A.mdPreview(); else A.renderMd(); });
+    await p.waitForFunction(() => document.querySelectorAll("#mdBody .md-img").length === 1 && !document.querySelector("#mdBody img"));
+    assert.deepEqual(p.errors, []);
+  }},
+
+  { name: "outside the macOS app, relative images in the preview stay as notes", async fn({ open }){
+    const p = await open();
+    let requested = 0; await p.ctx.route("**/__img/**", r => { requested++; return r.abort(); });
+    await p.evaluate(() => { const A = window.__plainpad; A.A.newTab(); const t = A.tabs()[A.tabs().length - 1]; t.path = "/w/doc.md"; A.cmMain.setValue("![a](img/a.png)\n\n![b](../b.png)\n"); A.A.mdPreview(); });
+    await p.waitForFunction(() => document.querySelectorAll("#mdBody .md-img").length === 2);
+    assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll("#mdBody .md-img")].map(n => n.textContent)), [
+      "Image: a (the preview can't load external or relative images, but exported HTML can)",
+      "Image: b (the preview can't load external or relative images, but exported HTML can)"]);
+    assert.equal(await p.evaluate(() => document.querySelectorAll("#mdBody img").length), 0);
+    assert.equal(requested, 0);
+    assert.deepEqual(p.errors, []);
   }}
 ];

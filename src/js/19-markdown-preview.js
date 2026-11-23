@@ -89,7 +89,25 @@ function renderMath(root){
 }
 function slugify(t){ return t.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, "").replace(/\s+/g, "-") || "section"; }
 /* Renders markdown into a detached element. Each top-level block is wrapped with the source line it starts on, for scroll sync and double-click-to-jump. */
-function buildMd(text, forExport){
+/* A relative image path in Markdown, resolved against the Markdown file's folder (macOS app only, see nativeImageRoot).
+   Returns null for anything that is not a relative path (URLs with a scheme, absolute paths), { error:"outside" } when ..
+   leaves the folder, { error:"type" } for files that are not images, otherwise the path's decoded segments. */
+const MD_IMG_EXT = /\.(png|jpe?g|gif|webp|svg)$/i;
+function mdLocalImage(src){
+  if (!src || /^[a-z][a-z0-9+.-]*:/i.test(src) || /^[/\\]/.test(src)) return null;
+  const segs = [];
+  for (const raw of src.replace(/[?#][\s\S]*$/, "").split("/")){
+    let s; try { s = decodeURIComponent(raw); } catch(e){ s = raw; }
+    if (s === "" || s === ".") continue;
+    if (s === ".."){ if (!segs.length) return { error:"outside" }; segs.pop(); continue; }
+    segs.push(s);
+  }
+  if (!segs.length) return null;
+  return MD_IMG_EXT.test(segs[segs.length - 1]) ? { segs } : { error:"type" };
+}
+/* Renders markdown into a detached element. Each top-level block is wrapped with the source line it starts on, for scroll sync and double-click-to-jump.
+   path: the file the Markdown came from, so the macOS app can show images next to it. */
+function buildMd(text, forExport, path){
   if (typeof marked === "undefined" || typeof DOMPurify === "undefined"){ const d = document.createElement("div"); d.append(el("p", { class:"md-empty", text:tr("The Markdown component didn't load. Reload the page and try again.") })); return d; }
   const tokens = marked.lexer(text);
   let line = 0, html = "";
@@ -110,8 +128,19 @@ function buildMd(text, forExport){
   if (!forExport) host.querySelectorAll("img").forEach(img => {
     const src = img.getAttribute("src") || "";
     if (/^data:image\//i.test(src)) return;
-    const ph = el("span", { class:"md-img", title: src }, tr("Image: {name} (the preview can't load external or relative images, but exported HTML can)", { name:img.getAttribute("alt") || src || tr("untitled") }));
-    img.replaceWith(ph);
+    const name = img.getAttribute("alt") || src || tr("untitled");
+    const note = text => el("span", { class:"md-img", title: src }, text);
+    const local = NATIVE && path ? mdLocalImage(src) : null;
+    if (!local){ img.replaceWith(note(tr("Image: {name} (the preview can't load external or relative images, but exported HTML can)", { name }))); return; }
+    if (local.error === "outside"){ img.replaceWith(note(tr("Image: {name} (the preview shows only images in the Markdown file's folder and its subfolders)", { name }))); return; }
+    if (local.error === "type"){ img.replaceWith(note(tr("Image: {name} (the preview shows only PNG, JPEG, GIF, WebP and SVG images)", { name }))); return; }
+    const notFound = () => note(tr("Image not found: {name}. Check that the file exists and that its path is relative to the Markdown file.", { name }));
+    const token = nativeImageRoot(path);
+    if (token === false){ img.replaceWith(notFound()); return; }
+    if (token === null){ img.replaceWith(note(name)); return; }   // the app is still answering; the preview redraws then
+    img.setAttribute("src", "__img/" + encodeURIComponent(token) + "/" + local.segs.map(encodeURIComponent).join("/"));
+    img.dataset.local = "";
+    img.addEventListener("error", () => { if (img.isConnected) img.replaceWith(notFound()); }, { once:true });
   });
   host.querySelectorAll("pre > code.language-mermaid").forEach(code => { const d = el("div", { class:"md-mermaid" }); d.dataset.code = code.textContent.replace(/\n$/, ""); code.parentNode.replaceWith(d); });
   host.querySelectorAll("pre > code.language-math, pre > code.language-latex, pre > code.language-tex").forEach(code => { const d = el("div", { class:"md-math md-math-block" }); d.dataset.tex = code.textContent.trim(); code.parentNode.replaceWith(d); });
@@ -129,13 +158,17 @@ function renderMd(){
   const scroller = $("#mdScroll"), body = $("#mdBody"); const keep = scroller.scrollTop;
   const text = t.doc.getValue();
   if (!text.trim()){ body.replaceChildren(el("p", { class:"md-empty", text:tr("This tab is empty. Start typing Markdown and the result appears here as you type.") })); md.blocks = []; return; }
-  const host = buildMd(text, false);
+  const host = buildMd(text, false, t.path);
   const mathReady = renderMath(host);
   const theme = isDarkTheme() ? "dark" : "default"; const pending = [];
   host.querySelectorAll(".md-mermaid").forEach(box => {
     const hit = mm.cache.get(theme + "\n" + box.dataset.code);
     if (hit) fillMermaid(box, hit); else { box.append(el("div", { class:"md-mermaid-wait", text:tr("Drawing diagram…") })); pending.push(box); }
   });
+  // The preview is rebuilt on every keystroke: images already shown move into the new content instead of loading again.
+  const shown = new Map();
+  body.querySelectorAll("img[data-local]").forEach(i => { if (i.complete && i.naturalWidth){ const k = i.getAttribute("src"); (shown.get(k) || shown.set(k, []).get(k)).push(i); } });
+  host.querySelectorAll("img[data-local]").forEach(i => { const o = (shown.get(i.getAttribute("src")) || []).shift(); if (o){ o.alt = i.alt; o.title = i.title; i.replaceWith(o); } });
   body.replaceChildren(...host.childNodes);
   const gen = ++md.gen;
   if (!mathReady) loadLib("katex", "katex").then(() => { if (gen === md.gen) renderMath(body); }, e => toast(tr("Can't show math: {reason}", { reason:e.message })));

@@ -45,7 +45,8 @@ Nhấn nút M↓ trên thanh công cụ (hoặc ⌃⇧M) để hiện bản xem 
 Bản xem trước cập nhật khi bạn gõ và cuộn theo trình soạn thảo. Nhấp đúp vào một đoạn trong bản xem trước sẽ nhảy tới mã nguồn của đoạn đó.
 Khối mã được tô màu theo ngôn ngữ bạn ghi (ví dụ ```sql hoặc ```csharp).
 Xuất HTML tải xuống một trang độc lập kèm định dạng. Sao chép HTML chỉ sao chép nội dung, tiện dán vào Confluence và các công cụ tương tự.
-Bản xem trước không hiển thị ảnh từ bên ngoài hoặc đường dẫn tương đối (giới hạn của hộp cát), nhưng HTML xuất ra thì hiển thị được.
+Trong ứng dụng macOS, bản xem trước hiển thị ảnh theo đường dẫn tương đối (ví dụ img/anh.png), nhưng chỉ với ảnh PNG, JPEG, GIF, WebP và SVG nằm trong thư mục của tệp Markdown hoặc các thư mục con.
+Bản web không hiển thị ảnh theo đường dẫn tương đối (giới hạn của hộp cát), và cả hai đều không hiển thị ảnh từ bên ngoài. HTML xuất ra thì hiển thị được.
 
 Công thức toán dùng cú pháp LaTeX: viết $E = mc^2$ trong dòng, và $$ … $$ hoặc khối ```math cho công thức riêng.
 Để gõ ký hiệu đô la, hãy viết \$.

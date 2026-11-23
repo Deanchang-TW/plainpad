@@ -105,6 +105,22 @@ function reloadTextTab(t, buf){
   t.cleanGen = doc.changeGeneration(true); t.forceDirty = false;
   renderTabs(); updateStatus(); persistSoon();
 }
+/* ---------- images in the Markdown preview ----------
+   The app serves the image files next to a tab's file at __img/<token>/<relative path>. The token stands for that file's
+   folder; the page asks for it with the tab's own path ("imageRoot"), so image URLs never carry an absolute path, and
+   the app only answers for files the tabs came from. Returns the token, null while the app is answering (the preview
+   redraws when it has), or false when the app refused. */
+const nativeImgRoots = new Map();   // folder → token | null (asking) | false (refused)
+function nativeImageRoot(path){
+  const dir = path.slice(0, path.lastIndexOf("/") + 1);
+  const known = nativeImgRoots.get(dir);
+  if (known !== undefined) return known;
+  nativeImgRoots.set(dir, null);
+  nativeWatch();   // the app checks the path against the watched files, so it must know this tab's file first
+  Promise.resolve(nativeCall({ type:"imageRoot", path })).then(r => r && typeof r.token === "string" ? r.token : false, () => false)
+    .then(token => { nativeImgRoots.set(dir, token); if (md.open) renderMd(); });
+  return null;
+}
 function nativeReady(){
   window.__ppNative = { run, open: nativeOpen, changed: nativeChanged, flush: () => Promise.resolve(persist()).then(() => true) };
   nativeCall({ type:"ready" });

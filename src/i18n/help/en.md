@@ -45,7 +45,8 @@ Press the M↓ toolbar button (or ⌃⇧M) to show a live preview of the current
 It follows your scrolling, and double-clicking a paragraph in the preview jumps to its source.
 Code blocks are highlighted by the language you name (for example ```sql or ```csharp).
 Export HTML downloads a standalone page with styles. Copy HTML copies only the content, ready to paste into Confluence and similar tools.
-The preview can't show external or relative image paths (a limit of the page sandbox), but exported HTML shows them.
+In the macOS app the preview shows images at relative paths (such as img/chart.png), as long as they are PNG, JPEG, GIF, WebP or SVG files in the Markdown file's folder or its subfolders.
+The web version can't show relative image paths (a limit of the page sandbox), and neither shows images from the internet. Exported HTML shows them.
 
 Math uses LaTeX syntax: write $E = mc^2$ inline, and $$ … $$ or a ```math block for a display formula.
 To type a dollar sign, write \$.
