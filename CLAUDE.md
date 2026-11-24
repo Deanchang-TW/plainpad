@@ -10,7 +10,8 @@ npm install                      # versions are pinned in package-lock.json
 npm test                         # build + every browser test (about 1 minute); run after every change
 node tests/run.mjs <keyword>     # only tests whose name contains the keyword, e.g. hex, encoding › detects
 node build.mjs --compare <file>  # byte-for-byte comparison of the build output, to prove a refactor changed nothing
-npm run build:mac                # builds dist/mac/Plainpad.app (Swift + WKWebView shell, needs swiftc)
+npm run build:mac                # builds dist/mac/Plainpad.app (Swift + WKWebView shell, needs swiftc) and copies it to /Applications
+                                 # (npm run build:mac -- --no-install only builds)
 ```
 
 Before running the tests on a machine for the first time, run `npx playwright install chromium`, or point `CHROMIUM_PATH` at a browser.

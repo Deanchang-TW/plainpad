@@ -3,7 +3,9 @@
 //   Contents/Resources/web/          the same page as dist/test/prod.html with its vendor/ files, served from plainpad://app/
 //   Contents/Resources/Plainpad.icns rendered from macos/icon.svg with the test browser, then packed with iconutil
 //   Contents/Resources/*.lproj       from macos/Resources: localized names for the document types in Info.plist
-// Usage: node build-mac.mjs [--universal]     (--universal also builds x86_64 and merges with lipo)
+// Usage: node build-mac.mjs [--universal] [--no-install]
+//   --universal   also builds x86_64 and merges with lipo
+//   --no-install  only builds; by default the app is then copied to /Applications/Plainpad.app, replacing the old copy
 // Needs Xcode or the Command Line Tools (swiftc). The app is ad-hoc signed, which is enough to run on this machine.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -12,7 +14,7 @@ import { chromium } from "playwright";
 const root = new URL("./", import.meta.url);
 const at = p => new URL(p, root).pathname;
 const pkg = JSON.parse(readFileSync(at("package.json"), "utf8"));
-const universal = process.argv.includes("--universal");
+const universal = process.argv.includes("--universal"), install = !process.argv.includes("--no-install");
 const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: "inherit", cwd: at("."), ...opts });
 
 sh("node", ["build.mjs"]);
@@ -54,3 +56,15 @@ if (universal){
 } else compile(process.arch === "arm64" ? "arm64" : "x86_64", bin);
 sh("codesign", ["--force", "--sign", "-", app]);
 console.log("Built dist/mac/Plainpad.app", universal ? "(universal)" : `(${process.arch})`, "version", pkg.version);
+
+/* Install: replace the whole bundle (rather than copying over it) so no file from an older build is left behind. ditto keeps
+   the signature and extended attributes intact. A copy that is running keeps the old version until it is restarted. */
+if (install){
+  const dest = "/Applications/Plainpad.app";
+  rmSync(dest, { recursive: true, force: true });
+  sh("ditto", [app, dest]);
+  console.log("Installed", dest);
+  let running = false;
+  try { execFileSync("pgrep", ["-f", dest + "/Contents/MacOS/Plainpad"], { stdio: "ignore" }); running = true; } catch(e){}
+  if (running) console.log("Plainpad is running from /Applications: quit it (⌘Q) and open it again to use the new version.");
+}
