@@ -30,8 +30,8 @@ python3 -m http.server 8000 --directory dist/artifact   # 開 http://localhost:8
 ## macOS 應用程式
 
 ```sh
-npm run build:mac                  # 產生 dist/mac/Plainpad.app（需要 Xcode 或 Command Line Tools）
-open dist/mac/Plainpad.app
+npm run build:mac                  # 產生 dist/mac/Plainpad.app 並複製到 /Applications（需要 Xcode 或 Command Line Tools；加 -- --no-install 只編譯）
+open /Applications/Plainpad.app
 ```
 
 同一份網頁包在原生外殼裡（`macos/`，Swift + WKWebView，沒有其他相依套件）。和網頁版不同的地方：
@@ -44,7 +44,9 @@ open dist/mac/Plainpad.app
 - 工作階段一樣保存在頁面的 localStorage / IndexedDB，關閉視窗等於結束 App，結束前會先寫入。
 
 `node build-mac.mjs --universal` 會同時編譯 arm64 與 x86_64。App 只有 ad-hoc 簽章，自己的電腦可以直接執行；要給別人用需要 Developer ID 簽章與公證。
-`PLAINPAD_DEBUG=1 dist/mac/Plainpad.app/Contents/MacOS/Plainpad` 會把頁面的請求和橋接訊息印到終端機，頁面也可以用右鍵「檢閱元件」打開 Web Inspector。
+要看頁面的請求和橋接訊息，先結束 Plainpad，再用
+`open --env PLAINPAD_DEBUG=1 --stdout /tmp/plainpad.log --stderr /tmp/plainpad.log /Applications/Plainpad.app` 啟動，
+並用 `tail -f /tmp/plainpad.log` 看紀錄。請用 `open` 啟動，不要直接執行 `Contents/MacOS/` 裡的程式，否則 Dock 重新啟動後會失去 App 的圖示。頁面也可以用右鍵「檢閱元件」打開 Web Inspector。
 
 ## 建置與測試
 

@@ -35,8 +35,8 @@ it by hand.
 ## macOS app
 
 ```sh
-npm run build:mac                  # builds dist/mac/Plainpad.app (needs Xcode or the Command Line Tools)
-open dist/mac/Plainpad.app
+npm run build:mac                  # builds dist/mac/Plainpad.app and copies it to /Applications (needs Xcode or the Command Line Tools; -- --no-install only builds)
+open /Applications/Plainpad.app
 ```
 
 The same page runs inside a native shell (`macos/`, Swift + WKWebView, no other dependencies). Differences from the web
@@ -56,8 +56,10 @@ version:
 
 `node build-mac.mjs --universal` builds for both arm64 and x86_64. The app has only an ad-hoc signature, which is fine on
 your own Mac; giving it to others needs a Developer ID signature and notarization.
-`PLAINPAD_DEBUG=1 dist/mac/Plainpad.app/Contents/MacOS/Plainpad` prints the page's requests and bridge messages to the
-terminal. Right-click > Inspect Element opens Web Inspector on the page.
+To see the page's requests and bridge messages, quit Plainpad and start it with
+`open --env PLAINPAD_DEBUG=1 --stdout /tmp/plainpad.log --stderr /tmp/plainpad.log /Applications/Plainpad.app`,
+then follow the log with `tail -f /tmp/plainpad.log`. Start it through `open` rather than running the executable in
+`Contents/MacOS/` directly; otherwise the Dock loses the app's icon if the Dock restarts. Right-click > Inspect Element opens Web Inspector on the page.
 
 ## Build and test
 

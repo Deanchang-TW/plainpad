@@ -44,7 +44,11 @@ page pretend to be the other platform, so both key paths can be checked on one m
   - The messages between page and app are documented in the comment at the top of `macos/Sources/WebShell.swift`; `11-native-shell.js` is the page side.
     Change both sides together and update `tests/native.test.mjs`, which stands in for the app with a fake message handler.
   - The page puts `window.__ppNative` on window only when `NATIVE`; the published page must still expose nothing.
-  - The Swift side cannot be tested with Playwright: after changing it, run `npm run build:mac` and try the app. `PLAINPAD_DEBUG=1` prints requests and messages.
+  - The Swift side cannot be tested with Playwright: after changing it, run `npm run build:mac` and try the app.
+    For requests and bridge messages, quit Plainpad, then start it with `PLAINPAD_DEBUG=1` through `open` and follow the log:
+    `open --env PLAINPAD_DEBUG=1 --stdout /tmp/plainpad.log --stderr /tmp/plainpad.log /Applications/Plainpad.app`, then `tail -f /tmp/plainpad.log`.
+    Do not run `Contents/MacOS/Plainpad` directly: the app is then not registered with Finder, and if the Dock restarts it drops
+    the app's icon while the window stays open.
 
 ## Limits of the page's environment
 
